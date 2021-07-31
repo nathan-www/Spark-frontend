@@ -8,6 +8,10 @@
   padding: 0;
 }
 
+input{
+  user-select: text;
+}
+
 .main-logo {
   color: $logo-color;
   font-weight: 700;
@@ -22,6 +26,10 @@
   flex-direction: column;
   justify-content: center;
   height: 100%;
+}
+
+::selection{
+  background-color: $primary;
 }
 
 #app {
@@ -39,6 +47,18 @@
   width: 100vw;
   height: 100vh;
   background-color: #fff;
+  z-index: 900;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+
+  img{
+    height: 40px;
+    width: 40px;
+    margin: auto;
+  }
 }
 
 a {

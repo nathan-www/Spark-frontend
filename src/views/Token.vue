@@ -141,6 +141,11 @@ h1#code {
     color: transparent;
     font-size: 45px;
     letter-spacing: 15px;
+    user-select: text;
+
+    &::selection{
+      color: #fff;
+    }
 }
 
 .biscuit {
@@ -159,6 +164,8 @@ h2 {
     margin-bottom: 15px;
     weight: 500;
 }
+
+
 
 .icon {
     font-size: 2em;

@@ -1,3 +1,5 @@
+import emojiStuff from './emojiStuff';
+
 var Mixins = {
 
   data: function() {
@@ -15,6 +17,8 @@ var Mixins = {
 
   mounted() {
 
+
+
     setInterval(() => {
       let tooltipEls = document.querySelectorAll('[data-tooltip]');
       Object.values(tooltipEls).forEach((el) => {
@@ -24,7 +28,7 @@ var Mixins = {
           document.getElementById('tooltip-content').innerText = e.target.getAttribute('data-tooltip');
           document.getElementById('tooltip').style.display = 'block';
         };
-        el.onmouseout = function(e){
+        el.onmouseout = function(e) {
           document.getElementById('tooltip').style.display = 'none';
         };
       });
@@ -34,6 +38,20 @@ var Mixins = {
 
   },
   methods: {
+
+    isMouseOverEl: function(event,elId) {
+
+      if(document.getElementById(elId) == null){
+        return false;
+      }
+      let el = document.getElementById(elId);
+      return ((event.clientY < el.getBoundingClientRect()['bottom']) && (event.clientY > el.getBoundingClientRect()['top']) && (event.clientX > el.getBoundingClientRect()['left']) && (event.clientX < el.getBoundingClientRect()['right']));
+
+    },
+
+    getEmojis: function() {
+      return emojiStuff.emojis;
+    },
 
     toggleDropdown: function(el) {
 
@@ -96,6 +114,25 @@ var Mixins = {
 
     },
 
+    niceTimeAlt: function(thenTimestamp) {
+
+      thenTimestamp = Math.round(thenTimestamp / 1000);
+      let currentTimestamp = Math.round((new Date()).getTime() / 1000);
+      let currentTime = new Date();
+      let thenTime = new Date(thenTimestamp * 1000);
+
+      if (Math.abs(thenTimestamp - currentTimestamp) < 86400 && thenTime.getDay() == currentTime.getDay()) {
+        return ("0" + thenTime.getHours()).slice(-2) + ":" + ("0" + thenTime.getMinutes()).slice(-2);
+      } else if (Math.abs(thenTimestamp - currentTimestamp) < 6050800) {
+        return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][thenTime.getDay()] + " " + ("0" + thenTime.getHours()).slice(-2) + ":" + ("0" + thenTime.getMinutes()).slice(-2);
+      } else if (currentTime.getFullYear() == thenTime.getFullYear()) {
+        return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][thenTime.getMonth()] + " " + thenTime.getDate() + " " + ("0" + thenTime.getHours()).slice(-2) + ":" + ("0" + thenTime.getMinutes()).slice(-2);
+      } else {
+        return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][thenTime.getMonth()] + " " + thenTime.getDate() + " " + thenTime.getFullYear() + " " + ("0" + thenTime.getHours()).slice(-2) + ":" + ("0" + thenTime.getMinutes()).slice(-2);
+      }
+
+    },
+
     niceTime: function(thenTimestamp) {
       let currentTimestamp = Math.round((new Date()).getTime() / 1000);
       let currentTime = new Date();
@@ -118,9 +155,9 @@ var Mixins = {
       } else if (Math.abs(currentTimestamp - thenTimestamp) > 432000) {
         return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][thenTime.getMonth()] + " " + thenTime.getDate();
       } else if (Math.abs(+currentTime.getDay() - +thenTime.getDay()) == 1) {
-        return "Yesterday, " + thenTime.getHours() + ":" + ("0" + thenTime.getMinutes()).slice(-2);
+        return "Yesterday, " + ("0" + thenTime.getHours()).slice(-2) + ":" + ("0" + thenTime.getMinutes()).slice(-2);
       } else if (Math.abs(currentTimestamp - thenTimestamp) <= 432000) {
-        return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][thenTime.getDay()] + ", " + thenTime.getHours() + ":" + ("0" + thenTime.getMinutes()).slice(-2);
+        return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][thenTime.getDay()] + ", " + ("0" + thenTime.getHours()).slice(-2) + ":" + ("0" + thenTime.getMinutes()).slice(-2);
       } else {
         return "";
       }

@@ -1,0 +1,832 @@
+@use './theme' as *;
+
+.flex .v-center {
+  height: auto;
+}
+
+.main {
+  height: 100vh;
+  user-select: none;
+  overflow: hidden;
+}
+
+.meeting-section {
+  background-color: $element-dark;
+  position: relative;
+  flex-shrink: 0;
+  width: calc(100vw - 400px);
+  transition: width ease-in-out 0.35s;
+
+  &:not(.chat-open) {
+    width: 100vw;
+  }
+}
+
+.sidebar {
+  .sidebar-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid $element-dark;
+  }
+  width: 400px;
+  background-color: $bg-main;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  .close-btn {
+    font-size: 20px;
+    color: $text-grey;
+    --ionicon-stroke-width: 45px;
+    height: 33px;
+    width: 33px;
+    background-color: $bg-secondary;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #fff;
+    }
+
+    ion-icon {
+      margin: auto;
+    }
+  }
+
+  h2 {
+    font-weight: 600;
+    font-size: 20px;
+    color: $text-grey;
+  }
+}
+
+.messages-area {
+  padding: 0 20px;
+  height: calc(100% - 85px - 44px);
+  overflow-y: scroll;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .message-announcement {
+    color: $text-grey;
+    font-weight: 500;
+    font-size: 11px;
+    text-align: center;
+    margin-top: 25px;
+
+    .announcement-time {
+      font-weight: 300;
+      font-size: 10px;
+    }
+  }
+}
+
+.message {
+  width: 70%;
+  margin-top: 25px;
+
+  &.self {
+    margin-left: auto;
+
+    .message-label {
+      position: absolute;
+      right: 0;
+    }
+
+    .bubble {
+      border-top-right-radius: 0;
+
+      &::selection {
+        background-color: $bg-secondary;
+      }
+    }
+  }
+
+  &:not(.self) {
+    .message-time {
+      position: absolute;
+      right: 0;
+      margin-right: 10px;
+    }
+
+    .bubble {
+      border-top-left-radius: 0;
+      background-color: $bg-secondary;
+    }
+  }
+
+  &.self + &.self,
+  &:not(.self) + &:not(.self) {
+    margin-top: 10px;
+
+    .message-info {
+      display: none;
+    }
+  }
+
+  .message-info {
+    position: relative;
+    color: $text-grey;
+    margin-bottom: 5px;
+
+    .message-time {
+      font-size: 10px;
+      font-weight: 300;
+      margin-left: 10px;
+    }
+
+    .message-label {
+      font-size: 12px;
+      font-weight: 400;
+    }
+  }
+
+  .bubble {
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 20px;
+    color: #fff;
+    background-color: $primary;
+    padding: 10px 14px;
+    border-radius: 20px;
+    user-select: text;
+
+    &.emojiMessage {
+      font-size: 25px;
+    }
+  }
+}
+
+.message-box {
+  background-color: $bg-secondary;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin: 0 20px 20px;
+  position: relative;
+
+  .scrolldown-alert {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    font-size: 13px;
+    color: #fff;
+    background-color: $primary;
+    padding: 4px 10px;
+    transform: translateX(-50%) translateY(-100%);
+    border-radius: 5px 5px 0 0;
+    box-shadow: 0 0 4px 1px rgba(#000,0.6);
+    cursor: pointer;
+
+    ion-icon {
+      animation: scrollDown 1.3s infinite;
+    }
+  }
+
+  .message-box-icon {
+    color: $text-grey;
+    font-size: 22px;
+    cursor: pointer;
+    transition: color 0.2s;
+    margin-left: 7px;
+
+    &:first-of-type {
+      margin-left: 0;
+    }
+
+    &:hover {
+      color: #ccc;
+    }
+
+    ion-icon {
+      position: relative;
+      top: 1.5px;
+    }
+  }
+
+  input {
+    font-size: 14px;
+    font-weight: 400;
+    color: #fff;
+    background-color: transparent;
+    border: 0;
+    width: 100%;
+
+    &::placeholder {
+      color: $text-grey;
+    }
+  }
+}
+
+.control-bar-label {
+  user-select: text;
+  background-color: $bg-secondary;
+  padding: 4px 7px;
+  border-radius: 6px;
+  margin-right: 8px;
+  position: relative;
+  cursor: pointer;
+
+  .icon {
+    color: $text-grey;
+    margin-right: 5px;
+    font-size: 14px;
+
+    ion-icon {
+      position: relative;
+      top: 2px;
+    }
+  }
+  font-weight: normal;
+  font-size: 12px;
+  color: #e6e6e6;
+}
+
+.control-bar {
+  background-color: $element-dark;
+  padding: 15px 20px;
+  margin-top: auto;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+
+  h2 {
+    font-weight: 500;
+    font-size: 15px;
+    color: #fff;
+    margin-bottom: 5px;
+  }
+
+  .button-group-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+  }
+
+  .button-group-right {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .circle-icon {
+    margin: 0 5px;
+    color: #efefef;
+    font-size: 21px;
+    height: 40px;
+    width: 40px;
+    background-color: $bg-secondary;
+    border-radius: 50%;
+    transition: box-shadow 0.2s;
+    position: relative;
+
+    .badge {
+      position: absolute;
+      top: -3px;
+      right: -8px;
+      font-size: 10px;
+      padding: 3px;
+      background-color: $danger;
+      border-radius: 50px;
+      width: 20px;
+      text-align: center;
+      padding: 2px 0;
+    }
+    cursor: pointer;
+
+    &:hover {
+      box-shadow: 0 0 5px rgba(255,255,255,0.3);
+    }
+
+    &.hangup {
+      background-color: $danger;
+
+      ion-icon {
+        position: relative;
+        top: 1px;
+        transform: rotate(135deg);
+      }
+
+      &:hover {
+        box-shadow: 0 0 10px rgba($danger,0.4);
+      }
+    }
+
+    ion-icon {
+      margin: auto;
+    }
+  }
+}
+
+.settings-section {
+  padding: 20px;
+}
+
+.participant-item {
+  padding: 10px;
+  user-select: text;
+  transition: background-color 0.2s;
+
+  &:not(:hover) .kick-icon {
+    display: none;
+  }
+
+  .kick-icon {
+    margin-left: auto;
+    color: $text-grey;
+    transition: color 0.2s;
+    cursor: pointer;
+    animation: fadeIn 0.3s;
+
+    &:hover {
+      color: #bbb;
+    }
+  }
+
+  .host-label {
+    font-size: 10px;
+    padding: 1.5px 5px;
+    position: relative;
+    top: -1.5px;
+    background-color: $primary;
+    color: #fff;
+    border-radius: 3px;
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  &:hover {
+    background-color: $element-dark;
+    border-radius: 6px;
+  }
+
+  .participant-icon {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+    background-color: #faa;
+    border-radius: 50%;
+    font-size: 14px;
+    margin-right: 10px;
+    font-weight: 500;
+    user-select: none;
+
+    .participant-icon-status {
+      position: absolute;
+      bottom: -4px;
+      right: -5px;
+      height: 14px;
+      width: 14px;
+      border: 2px solid $bg-main;
+      border-radius: 50%;
+
+      &.online {
+        background-color: $success;
+      }
+
+      &.offline {
+        background-color: $text-grey;
+      }
+    }
+  }
+
+  h2 {
+    font-size: 15px;
+    color: #ddd;
+    font-weight: 500;
+  }
+
+  p {
+    font-size: 12px;
+    color: $text-grey;
+  }
+}
+
+.modal.invite {
+  width: 500px;
+  position: fixed;
+  z-index: 100;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  background-color: $bg-secondary;
+  border: 1px solid $border-grey;
+  animation: popupAnimation 0.2s;
+
+  .form-field {
+    position: relative;
+  }
+  border-radius: 10px;
+
+  .header {
+    padding: 15px;
+    border-bottom: 1px solid $border-grey;
+  }
+
+  .content {
+    padding: 15px;
+  }
+
+  .footer {
+    padding: 15px;
+    border-top: 1px solid $border-grey;
+
+    .btn {
+      display: block;
+      margin-right: 0;
+      margin-left: auto;
+      width: 100px;
+      text-align: center;
+    }
+  }
+
+  .search-icon {
+    color: $text-grey;
+  }
+
+  p {
+    color: $text-grey;
+    font-size: 14px;
+    margin-bottom: 15px;
+  }
+
+  h2 {
+    color: #ccc;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .close-btn {
+    margin-left: auto;
+    font-size: 18px;
+    height: 25px;
+    width: 25px;
+    background-color: rgba($text-grey,0.3);
+    border-radius: 50%;
+    text-align: center;
+    cursor: pointer;
+    color: #ccc;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #fff;
+    }
+
+    ion-icon {
+      margin: auto;
+      --ionicon-stroke-width: 45px;
+    }
+  }
+}
+
+.search-results {
+  position: absolute;
+  left: 0;
+  bottom: 40px;
+  background-color: $element-dark;
+  border: 1px solid $border-grey;
+  padding: 5px;
+  border-radius: 6px;
+  width: calc(100% - 60px);
+  margin-left: 30px;
+  max-height: 215px;
+  overflow-y: scroll;
+
+  .p-icon {
+    height: 32px;
+    width: 32px;
+    background-color: #F2C94C;
+    border-radius: 50%;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    font-weight: 500;
+    font-size: 13px;
+    margin-right: 4px;
+    position: relative;
+
+    .status-spot {
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      height: 14px;
+      width: 14px;
+      border-radius: 50%;
+      border: 2px solid $element-dark;
+      background-color: $text-grey;
+
+      &.online {
+        background-color: $success;
+      }
+    }
+  }
+
+  .p-icon {
+    margin-right: 7px;
+  }
+
+  span.addedTag {
+    margin-left: 10px;
+    font-size: 12px;
+    color: $success;
+  }
+
+  .result {
+    span {
+      padding: 0;
+    }
+    padding: 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: $bg-main;
+    }
+  }
+
+  p.name {
+    font-size: 14px;
+    user-select: text;
+    margin-bottom: 0;
+  }
+
+  p.identity {
+    font-size: 12px;
+    user-select: text;
+    margin-bottom: 0;
+  }
+}
+
+.invited-participants {
+  margin: 10px -5px -5px;
+  flex-wrap: wrap;
+  width: 450px;
+}
+
+.invitee {
+  ion-icon {
+    position: relative;
+    top: 0.5px;
+    margin-left: 8px;
+    cursor: pointer;
+  }
+  background-color: $text-grey;
+  border-radius: 6px;
+  padding: 4px 7px;
+  margin: 5px;
+  font-size: 13px;
+  color: #fff;
+}
+
+.settings-card {
+  margin-bottom: 20px;
+
+  .participant-item {
+    cursor: pointer;
+  }
+
+  .participant-item .participant-icon .participant-icon-status {
+    border: 2px solid $bg-secondary;
+  }
+
+  &:not(.active) {
+    .dropdown-icon {
+      transform: rotate(-90deg);
+    }
+
+    .header {
+      border-radius: 10px;
+    }
+
+    .content {
+      display: none;
+    }
+  }
+
+  .header {
+    .dropdown-icon {
+      margin-left: auto;
+      transition: transform 0.2s, color 0.2s;
+      color: #ccc;
+    }
+
+    &:hover {
+      .dropdown-icon {
+        color: #fff;
+      }
+    }
+    color: #fff;
+    font-size: 14px;
+    background-color: $border-grey;
+    padding: 15px;
+    border-radius: 10px 10px 0 0;
+    cursor: pointer;
+  }
+
+  .content {
+    padding: 15px;
+    background-color: $bg-secondary;
+    border: 1px solid $border-grey;
+    border-radius: 0 0 10px 10px;
+
+    &.participants {
+      padding: 10px;
+    }
+
+    .spacer {
+      margin-bottom: 18px;
+    }
+
+    p.label {
+      color: $text-grey;
+      font-size: 14px;
+
+      &.margin {
+        margin-bottom: 8px;
+      }
+    }
+  }
+}
+
+.copied-popup {
+  display: none;
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100%);
+  padding: 4px 6px;
+  background-color: $success-dark;
+  color: #fff;
+  border-radius: 3px;
+  animation: fadeIn 0.2s;
+
+  .triangle {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid $success-dark;
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+.emojiPicker {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translateY(-100%);
+  background-color: $bg-secondary;
+  border: 1px solid $border-grey;
+  border-radius: 5px;
+  z-index: 50;
+  box-shadow: 0 0 4px 1px rgba($border-grey,0.6);
+  animation: emojiPickerAppear 0.2s;
+
+  .search-bar {
+    margin-bottom: 10px;
+  }
+
+  .body,
+  .body-alt {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    margin: 8px;
+    width: 300px;
+    height: 200px;
+    overflow-y: scroll;
+  }
+
+  .body,
+  .body-inner {
+    display: flex;
+    flex-wrap: wrap;
+
+    .emoji-item {
+      flex-shrink: 0;
+      font-size: 22px;
+      height: 33.3px;
+      width: 33.3px;
+      text-align: center;
+      transition: background-color 0.3s;
+      cursor: pointer;
+      border-radius: 5px;
+      overflow: hidden;
+
+      &:hover {
+        background-color: #bb96de;
+      }
+    }
+  }
+
+  .tabs {
+    padding: 5px 5px 0;
+    border-bottom: 1px solid $border-grey;
+
+    .tab {
+      font-size: 20px;
+      flex-shrink: 0;
+      color: $text-grey;
+      height: 34px;
+      width: 34px;
+      padding-bottom: 4px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s;
+
+      &.active {
+        border-bottom: 2px solid $primary;
+        color: #ccc;
+      }
+
+      &:hover {
+        color: #ccc;
+      }
+
+      ion-icon {
+        margin: auto;
+      }
+    }
+  }
+}
+
+.inline-emoji-picker {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  transform: translateY(-100%);
+  background-color: $bg-secondary;
+  border: 1px solid $border-grey;
+  border-radius: 5px;
+  padding: 4px;
+  max-width: 200px;
+  overflow-x: scroll;
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .emoji-item {
+    flex-shrink: 0;
+    flex-grow: 0;
+    font-size: 20px;
+    height: 30px;
+    width: 30px;
+    text-align: center;
+    transition: background-color 0.3s;
+    cursor: pointer;
+    border-radius: 5px;
+    overflow: hidden;
+
+    &.active {
+      background-color: rgba($text-grey,0.2);
+    }
+
+
+  }
+}
+@keyframes scrollDown {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(2px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+@keyframes emojiPickerAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-100%) scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(-100%) scale(1);
+  }
+}

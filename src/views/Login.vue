@@ -269,7 +269,7 @@ export default {
     loginRequest() {
 
       if (this.current_type == "phone") {
-        if (this.identity.length > 0) {
+        if (this.identity.length > 0 && this.identity[0] == "0") {
           this.identity = this.identity.split("").splice(1).join("");
         }
       }
@@ -281,6 +281,10 @@ export default {
         "identity": this.identity,
         "recaptcha_token": this.recaptcha_token
       };
+
+      if(this.current_type == "phone"){
+        reqObj.identity = this.current_country_code + "" + this.identity;
+      }
 
       if (this.login_stage == "new_user") {
         reqObj['full_name'] = this.first_name.trim() + " " + this.last_name.trim();

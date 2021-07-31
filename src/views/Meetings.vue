@@ -1,6 +1,6 @@
 <template>
 <div id="loader" v-if="loading">
-
+  <img src="./../assets/img/emoji/monkey.png" alt="">
 </div>
 
 <a class="logo-alt">{{appName}}</a>
@@ -25,23 +25,25 @@
   </div>
 </div>
 
-<div class="popup-new-meeting">
+<div class="popup-new-meeting fadeIn" v-if="displayNewMeetingPopup">
   <div class="header flex">
     <div class="v-center">
-      <h2>New meeting</h2>
+      <h2><img src="./../assets/img/emoji/rocket.png" class="emoji" /> New meeting</h2>
     </div>
-    <div class="v-center">
-      <div class="close-btn">
+    <div class="v-center" style="margin-left: auto;">
+      <div class="close-btn" @click="invitedParticipants = []; newMeetingError = false; newMeetingName = ''; displayNewMeetingPopup = false">
         <ion-icon name="close-outline"></ion-icon>
       </div>
     </div>
   </div>
   <div class="content">
 
+    <p class="color--danger" style="font-size: 13px;" v-if="newMeetingError">Couldn't create meeting<br /><br /></p>
+
     <p class="subheading">Name</p>
 
     <div class="form-field form-field-small">
-      <input type="text" placeholder="e.g. Awesome team meeting">
+      <input @input='newMeetingName = newMeetingName.replace(/[^A-Za-z0-9-\/.&@,|_+$£#%!() ]/g,"").substr(0,25)' v-model="newMeetingName" type="text" placeholder="e.g. Awesome team meeting">
     </div>
 
     <p class="desc"></p>
@@ -70,7 +72,61 @@
       <div class="v-center search-icon">
         <ion-icon name="search"></ion-icon>
       </div>
-      <input type="text" placeholder="Add by name, email or phone number" />
+      <input type="text" v-model="newMeetingParticipantSearch" @input="peopleSearch(newMeetingParticipantSearch)" placeholder="Add by name, email or phone number" />
+      <div class="search-results fadeIn" v-if="peopleSearchResults.filter((i) => i.user_id !== account.userID).length > 0">
+
+        <div class="result flex" v-for="r in peopleSearchResults.filter((i) => i.user_id !== account.userID)" @click="newMeetingInvite(r)">
+          <div class="v-center">
+            <div v-if="!r.hasOwnProperty('unregistered')" class="p-icon" :style="'background-color:' + conveyor('nm-search-results',r.user_id,['#d9730d','#dfab01','#0f7b6c','#0b6e99','#6940a5','#ad1a72','#e03e3e'])">
+              {{r['first_name'][0]}}{{r['last_name'][0]}}
+            </div>
+            <div v-else class="p-icon" style="background-color: #aab;">
+              ?
+            </div>
+          </div>
+          <div class="v-center">
+            <div>
+              <p class="name">
+                <span v-if="!r.hasOwnProperty('unregistered')">{{r['first_name']}} {{r['last_name']}}</span>
+                <span v-else><i>Invite new user</i></span>
+              </p>
+              <p class="identity">
+                <span v-if="r.hasOwnProperty('display_identity')" class="identity">{{r['display_identity']}}</span>
+                <span v-else class="identity">{{r['identity']}}</span>
+                <span class="addedTag fadeIn" v-if="!invitedParticipants.every((i) => i.identity !== r.identity)">Added</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="invited-participants flex">
+
+      <div class="invitee flex" v-for="p in invitedParticipants" @click="invitedParticipants.splice(invitedParticipants.indexOf(p), 1)">
+        <div class="v-center" v-if="!p.hasOwnProperty('unregistered')">
+          {{p.first_name}} {{p.last_name}}
+        </div>
+        <div class="v-center" v-else-if="p.hasOwnProperty('display_identity')">
+          {{p.display_identity}}
+        </div>
+        <div class="v-center" v-else>
+          {{p.identity}}
+        </div>
+        <div class="v-center">
+          <ion-icon name="close"></ion-icon>
+        </div>
+      </div>
+
+
+    </div>
+
+
+    <div class="flex" style="margin-top: 20px;">
+      <div style="margin-left: auto;"></div>
+      <a v-if="!loadingNewMeeting" @click="createNewMeeting()" class="btn btn-primary btn-small">Create meeting</a>
+      <a v-else class="btn btn-primary btn-small">Creating meeting...&nbsp; <img class="icon loader" src="./../assets/img/loading.png" /></a>
     </div>
 
   </div>
@@ -151,14 +207,14 @@
 
         <div class="v-center" style="margin-left: auto;">
           <div class="sidebar-buttons-right">
-            <div class="btn-sidebar">
+            <div class="btn-sidebar" @click="displayNewMeetingPopup = true">
               <ion-icon name="add-outline"></ion-icon>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="sidebar-item flex" v-for="m in [...meetings].filter((m) => m.is_owner).sort((a,b) => a.creation_timestamp < b.creation_timestamp)" @click="$router.push('/meeting/'+m.id)">
+      <div class="sidebar-item flex" v-for="m in [...meetings].filter((m) => m.is_owner).sort((a,b) => a.creation_timestamp < b.creation_timestamp)" @click="navigate('/meeting/'+m.id)">
         <div class="v-center">
           <img class="emoji" :src='"img/emoji/"+conveyor("sidebar",m.id,["green","orange","purple","blue","yellow","brown","black","white"])+"-circle.png"' />
         </div>
@@ -175,7 +231,7 @@
         </div>
       </div>
 
-      <div class="sidebar-item flex" v-for="m in [...meetings].filter((m) => !m.is_owner).sort((a,b) => a.creation_timestamp < b.creation_timestamp)" @click="$router.push('/meeting/'+m.id)">
+      <div class="sidebar-item flex" v-for="m in [...meetings].filter((m) => !m.is_owner).sort((a,b) => a.creation_timestamp < b.creation_timestamp)" @click="navigate('/meeting/'+m.id)">
         <div class="v-center">
           <img class="emoji" :src='"img/emoji/"+conveyor("sidebar",m.id,["green","orange","purple","blue","yellow","brown","black","white"])+"-circle.png"' />
         </div>
@@ -188,7 +244,7 @@
     </div>
 
     <div class="sidebar-content bottom">
-      <div class="btn btn-primary">
+      <div class="btn btn-primary" @click="displayNewMeetingPopup = true; getPreliminaryJoinLink()">
         <ion-icon name="add-outline"></ion-icon> New meeting
       </div>
 
@@ -235,7 +291,7 @@
           <p class="started-text">
             <ion-icon name="time-outline"></ion-icon> Started {{niceTime(meeting.creation_timestamp)}}
           </p>
-          <a class="btn btn-primary btn-small" @click="$router.push('/meeting/'+meeting.id)">Join</a>
+          <a class="btn btn-primary btn-small" @click="navigate('/meeting/'+meeting.id)">Join</a>
         </div>
 
       </div>
@@ -370,11 +426,63 @@ export default {
 
       toggleInviteLink: true,
 
-      preliminaryJoinLink: "..."
+      preliminaryJoinLink: "...",
+
+      newMeetingParticipantSearch: "",
+
+      invitedParticipants: [],
+
+      newMeetingName: "",
+
+      displayNewMeetingPopup: false,
+
+      loadingNewMeeting: false,
+
+      newMeetingError: false
 
     }
   },
   methods: {
+
+    navigate(dest){
+      clearInterval(app.interval);
+      this.$router.push(dest);
+    },
+
+    createNewMeeting() {
+
+      app.loadingNewMeeting = true;
+      app.newMeetingError = false;
+
+      app.api_request('POST', '/meetings/new', {
+        'title': app.newMeetingName,
+        'allow_join_link': app.toggleInviteLink,
+        'invitees': app.invitedParticipants.map((i) => i.identity)
+      }).then((resp) => {
+
+        app.wait(1000).then(() => {
+
+          resp = JSON.parse(resp);
+          app.loadingNewMeeting = false;
+          if (resp.status == "success") {
+            app.navigate('/meeting/' + resp.meeting_id);
+          } else {
+            app.newMeetingError = true;
+          }
+
+        });
+
+      })
+
+    },
+
+    newMeetingInvite(identity) {
+
+      if (app.invitedParticipants.every((i) => i.identity !== identity.identity)) {
+        app.invitedParticipants.push(identity);
+      }
+
+    },
 
     getPreliminaryJoinLink: function() {
       app.api_request('GET', '/meetings/preliminaryJoinLink').then((resp) => {
@@ -385,32 +493,63 @@ export default {
       });
     },
 
+    validateEmail: function(email) {
+      if (/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(email)) {
+        return true;
+      }
+      return false;
+    },
+
     peopleSearch: function(term) {
 
       let people = {};
 
-      if (term.length > 2) {
-        app.meetings.forEach((m) => {
-          m.participants.forEach((p) => {
-            if (p.user_id.includes(term) || p.identity.includes(term)) {
-              people[p.user_id] = p;
-            }
-          });
-        });
+      if (term !== null && (term + "").length > 2) {
 
-        app.api_request('POST', '/contacts/lookup', {
-          "identity": term
-        }).then((resp) => {
-          resp = JSON.parse(resp);
-          if (resp.status == "success") {
-            people[resp.user.user_id] = resp.user;
-            app.peopleSearchResults = Object.values(people);
-          } else {
-            app.peopleSearchResults = Object.values(people);
+        function getContacts() {
+          app.meetings.forEach((m) => {
+            m.participants.forEach((p) => {
+              if ((p.first_name + " " + p.last_name).toLowerCase().includes(term.toLowerCase()) || p.identity.toLowerCase().includes(term.toLowerCase())) {
+                people[p.user_id] = p;
+              }
+            });
+          });
+        }
+
+        if (app.validateEmail(term) || (!isNaN(term.replaceAll("+", "").replaceAll(" ", "")) && term.length > 9)) {
+
+          if (!app.validateEmail(term)) {
+            term = term.replaceAll("+", "").replaceAll(" ", "");
           }
-        }).catch(() => {
+
+          app.api_request('POST', '/contacts/lookup', {
+            "identity": term
+          }).then((resp) => {
+
+            resp = JSON.parse(resp);
+            if (resp.status == "success") {
+
+              resp.users.forEach((u) => {
+                people[u.user_id] = u;
+              });
+              getContacts();
+              app.peopleSearchResults = Object.values(people);
+            } else {
+              getContacts();
+              app.peopleSearchResults = Object.values(people);
+            }
+          }).catch(() => {
+            getContacts();
+            app.peopleSearchResults = Object.values(people);
+          });
+        } else {
+          getContacts();
           app.peopleSearchResults = Object.values(people);
-        });
+        }
+
+
+      } else {
+        app.peopleSearchResults = [];
       }
 
 
@@ -459,6 +598,7 @@ export default {
           app.account.identities = resp.identities;
           app.account.firstName = resp.firstName;
           app.account.lastName = resp.lastName;
+          app.account.userID = resp.userID;
 
           if (app.firstNameTemp == null) {
             app.firstNameTemp = resp.firstName;
@@ -512,9 +652,12 @@ export default {
     app = this;
 
     //Reload account, sessions and meetings every 30 sec
-    setInterval(app.loadSessions, 30000);
-    setInterval(app.loadAccount, 30000);
-    setInterval(app.loadMeetings, 30000);
+    app.interval = setInterval(() => {
+      app.loadSessions();
+      app.loadAccount();
+      app.loadMeetings();
+    },30000);
+
     app.loadSessions();
     app.loadAccount();
     app.loadMeetings();
@@ -541,6 +684,37 @@ body {
 <style scoped lang="scss">
 @use './../assets/scss/_theme' as *;
 @use './../assets/scss/_elements' as *;
+
+.p-icon {
+    height: 32px;
+    width: 32px;
+    background-color: #F2C94C;
+    border-radius: 50%;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    font-weight: 500;
+    font-size: 13px;
+    margin-right: 4px;
+    position: relative;
+
+    .status-spot {
+        position: absolute;
+        bottom: -4px;
+        right: -4px;
+        height: 14px;
+        width: 14px;
+        border-radius: 50%;
+        border: 2px solid $element-dark;
+        background-color: $text-grey;
+
+        &.online {
+            background-color: $success;
+        }
+    }
+}
 
 .nav {
     padding: 20px;
@@ -847,36 +1021,6 @@ p.credits {
         margin-top: 30px;
     }
 
-    .p-icon {
-        height: 32px;
-        width: 32px;
-        background-color: #F2C94C;
-        border-radius: 50%;
-        color: #fff;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        text-align: center;
-        font-weight: 500;
-        font-size: 13px;
-        margin-right: 4px;
-        position: relative;
-
-        .status-spot {
-            position: absolute;
-            bottom: -4px;
-            right: -4px;
-            height: 14px;
-            width: 14px;
-            border-radius: 50%;
-            border: 2px solid $element-dark;
-            background-color: $text-grey;
-
-            &.online {
-                background-color: $success;
-            }
-        }
-    }
 }
 
 .participant-icons {
@@ -1073,6 +1217,10 @@ input[disabled] {
 
     box-shadow: 0 0 2px $border-grey;
 
+    .form-field {
+        max-width: 350px;
+    }
+
     h2 {
         font-weight: 500;
         font-size: 16px;
@@ -1108,19 +1256,16 @@ input[disabled] {
         padding: 16px;
     }
 
-    .search-icon{
-      padding-left: 10px;
-      font-size: 14px;
-      color: $text-grey;
+    .search-icon {
+        padding-left: 10px;
+        font-size: 14px;
+        color: $text-grey;
     }
 
-    .divider{
-      border-bottom: 1px solid $border-grey;
-      width: calc(100% + 32px);
-      margin-left: -16px;
-      margin-right: -16px;
-      margin-top: 15px;
-      margin-bottom: 15px;
+    .divider {
+        border-bottom: 1px solid $border-grey;
+        width: calc(100% + 32px);
+        margin: 15px -16px;
     }
 
     .v-center {
@@ -1149,5 +1294,77 @@ input[disabled] {
             margin: auto;
         }
     }
+
+    .form-field {
+        position: relative;
+    }
+
+    .p-icon {
+        margin-right: 7px;
+    }
+
+    .search-results {
+        position: absolute;
+        left: 0;
+        bottom: 40px;
+        background-color: $element-dark;
+        border: 1px solid $border-grey;
+        padding: 5px;
+        border-radius: 6px;
+        width: calc(100% - 60px);
+        margin-left: 30px;
+
+        max-height: 215px;
+        overflow-y: scroll;
+
+        .addedTag {
+            padding-left: 0;
+            font-size: 12px;
+            color: $success;
+        }
+
+        .result {
+
+            padding: 10px;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+
+            &:hover {
+                background-color: $bg-main;
+            }
+        }
+
+        .name {
+            font-size: 14px;
+            user-select: text;
+        }
+
+        .identity {
+            font-size: 12px;
+            user-select: text;
+        }
+
+    }
+}
+
+.invited-participants {
+    margin: 10px -5px -5px;
+    flex-wrap: wrap;
+    width: 450px;
+}
+
+.invitee {
+    ion-icon {
+        position: relative;
+        top: 0.5px;
+        margin-left: 8px;
+        cursor: pointer;
+    }
+    background-color: $text-grey;
+    border-radius: 6px;
+    padding: 4px 7px;
+    margin: 5px;
+    font-size: 13px;
 }
 </style>

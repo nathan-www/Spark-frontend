@@ -21,10 +21,6 @@
     }
   }
 
-  input::selection, span::selection{
-    background-color: $primary;
-  }
-
   input,span {
     padding: 15px;
     height: 100%;
@@ -59,7 +55,6 @@
   transition: filter 0.2s;
   color: #fff;
   margin: 0 auto;
-  width: 300px;
 
   &-primary {
     background-color: $primary;
@@ -143,6 +138,10 @@ input:focus {
 
   .popup-main{
     padding: 20px 50px 36px 20px;
+  }
+
+  .btn{
+    margin-left: 15px;
   }
 
   h2 {
