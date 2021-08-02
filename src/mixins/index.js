@@ -10,14 +10,15 @@ var Mixins = {
         setters: {}
       },
 
+      img_mimes: ['image/gif','image/png','image/jpg','image/jpeg'],
+
       document: document,
       console: console,
+      window: window
     }
   },
 
   mounted() {
-
-
 
     setInterval(() => {
       let tooltipEls = document.querySelectorAll('[data-tooltip]');
@@ -39,9 +40,23 @@ var Mixins = {
   },
   methods: {
 
-    isMouseOverEl: function(event,elId) {
+    formatFileSize: function(bytes){
 
-      if(document.getElementById(elId) == null){
+      if(bytes < 1000){
+        return bytes + "B";
+      }
+      else if(bytes < 1000000){
+        return Math.round(bytes/100)/10 + "KB";
+      }
+      else{
+        return Math.round(bytes/100000)/10 + "MB";
+      }
+
+    },
+
+    isMouseOverEl: function(event, elId) {
+
+      if (document.getElementById(elId) == null) {
         return false;
       }
       let el = document.getElementById(elId);

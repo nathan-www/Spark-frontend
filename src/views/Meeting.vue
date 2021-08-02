@@ -3,6 +3,20 @@
   <img src="./../assets/img/emoji/monkey.png" alt="">
 </div>
 
+<div id="error-alert" class="flex fadeIn">
+  <div class="icon-zone v-center">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+  </div>
+  <div class="content-zone v-center">
+    <p id="error-alert-text">Oh no! Something went wrong.</p>
+  </div>
+  <div class="close-btn v-center" onclick="document.getElementById('error-alert').style.display = 'none'">
+    <ion-icon name="close-outline"></ion-icon>
+  </div>
+</div>
+
+<input type="file" id="fileInput" style="display: none;" name="filename" @change="uploadedFile = document.getElementById('fileInput').files[0]; uploadAttachment()">
+
 <input type="text" id="copyinput" style="display: none;">
 
 <div class="popup-backdrop fadeIn" id="popup-backdrop"></div>
@@ -24,6 +38,39 @@
     </div>
   </div>
 </div>
+
+<div class="file-upload-popup-outer fadeIn" v-if="uploadPopup" @mousedown="mainClick($event)"></div>
+
+<div class="file-upload-popup" id="uploadPopup" v-if="uploadPopup">
+  <div class="inner" @click="document.getElementById('fileInput').click()" ondrop="event.preventDefault(); event.stopPropagation(); app.fileDropHandler(event);" ondragleave="document.querySelector('#uploadPopup .inner').classList.remove('active')"
+    ondragover="document.querySelector('#uploadPopup .inner').classList.add('active'); event.preventDefault(); event.stopPropagation();" ondragenter="event.preventDefault(); event.stopPropagation();">
+    <h1>
+      <ion-icon name="cloud-upload-outline"></ion-icon>
+    </h1>
+    <h2>Upload files</h2>
+    <p>Drag and drop files here, or click to pick a file.</p>
+  </div>
+</div>
+
+<div class="file-upload-popup-outer fadeIn" v-if="uploadingPopup" @mousedown="mainClick($event)"></div>
+
+<div class="file-uploading-popup flex" v-if="uploadingPopup" id="uploadingPopup">
+  <div class="icon-zone v-center">
+    <ion-icon name="arrow-up-outline"></ion-icon>
+  </div>
+  <div class="content-zone v-center">
+    <div>
+      <h3>Uploading {{formatFileName(uploadedFile['name'])}}</h3>
+    </div>
+  </div>
+</div>
+
+<div class="file-upload-popup-outer fadeIn" v-if="sharedImgPopup !== ''" @mousedown="mainClick($event)"></div>
+<div class="sharedImgPopup" v-if="sharedImgPopup !== ''" id="sharedImgPopup">
+  <img :src="sharedImgPopup" />
+  <a :href="sharedImgPopup" target="_blank">Open original</a>
+</div>
+
 
 
 <div class="main flex" @mousedown="mainClick($event)">
@@ -352,25 +399,62 @@
           <span class="announcement-time"> &nbsp;{{niceTimeAlt(message.timestamp)}}</span>
         </div>
 
-        <div class="message self" v-else-if="message.type == 'textmessage' && message.from == account.userID">
+
+        <div :class="'message' + ((message.from == account.userID) ? ' self':'')" v-else>
+
           <div class="message-info flex">
-            <span class="message-time">{{niceTimeAlt(message.timestamp)}}</span>
-            <span class="message-label">You</span>
+            <div class="v-center message-label-container">
+              <div v-if="message.from == account.userID" class="message-label">You</div>
+              <div v-else class="message-label">{{participantById(message.from).first_name}}</div>
+            </div>
+            <div class="v-center">
+              <div class="message-time">{{niceTimeAlt(message.timestamp)}}</div>
+            </div>
           </div>
-          <div :class="'bubble' + ((isJustEmojis(message.message)) ? ' emojiMessage':'')">
-            {{message.message}}
-          </div>
+
+          <template v-if="message.type == 'textmessage'">
+
+            <div class="flex">
+              <div style="margin-left: auto;" v-if="message.from == account.userID"></div>
+
+              <div :class="'bubble' + ((isJustEmojis(message.message)) ? ' emojiMessage':'')" v-html="processTextMessage(message.message)">
+              </div>
+            </div>
+
+            <template v-for="embed in getEmbeds(message.message)">
+              <div class="youtube-embed" v-if="embed.type == 'youtube'">
+                <iframe :src="'https://www.youtube-nocookie.com/embed/' + embed.video" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+              </div>
+            </template>
+
+          </template>
+
+          <template v-else-if="message.type == 'attachment'">
+
+            <div class="flex">
+              <div style="margin-left: auto;" v-if="message.from == account.userID"></div>
+
+              <img class="sharedImage" v-if="img_mimes.includes(message.attachment.type)" :src="message.objectURL" @click="sharedImgPopup = message.objectURL" />
+
+              <div class="attachment-card flex" v-else
+                @click="downloadAttachment(message.attachment.attachment_id, message.attachment.keys, message.attachment.priv_key, {name: message.attachment.name, mime_type: message.attachment.mime_type, size: message.attachment.size})">
+                <div class="icon-zone v-center">
+                  <ion-icon name="document-attach-outline"></ion-icon>
+                </div>
+                <div class="content-zone v-center">
+                  <h2>{{message.attachment.name}}</h2>
+                  <p>{{formatFileSize(message.attachment.size)}}</p>
+                </div>
+              </div>
+
+            </div>
+
+          </template>
+
+
+
         </div>
 
-        <div class="message" v-else-if="message.type == 'textmessage'">
-          <div class="message-info flex">
-            <span class="message-time">{{niceTimeAlt(message.timestamp)}}</span>
-            <span class="message-label">{{participantById(message.from).first_name}}</span>
-          </div>
-          <div :class="'bubble' + ((isJustEmojis(message.message)) ? ' emojiMessage':'')">
-            {{message.message}}
-          </div>
-        </div>
       </template>
 
 
@@ -452,11 +536,12 @@
       <div v-if="showNewMessageAlert" class="scrolldown-alert" @click="scrollMessagesToBottom(); showNewMessageAlert = false;">
         New messages <ion-icon name="arrow-down"></ion-icon>
       </div>
-      <input tabindex="-1" type="text" id="messageInput" v-model="newMessageText" placeholder="Write a message..." @keyup.enter="messageBoxEnter()" @keydown.left="panInlineEmojis($event,'left')" @keydown.right="panInlineEmojis($event,'right')" @input="messageBoxInput()">
+      <input tabindex="-1" type="text" id="messageInput" v-model="newMessageText" placeholder="Write a message..." @keyup.enter="messageBoxEnter()" @keydown.left="panInlineEmojis($event,'left')" @keydown.right="panInlineEmojis($event,'right')"
+        @input="messageBoxInput()">
       <div class="message-box-icon" @click="showEmojiPicker = !showEmojiPicker;" id="emojiPickerButton">
         <ion-icon name="happy-outline"></ion-icon>
       </div>
-      <div class="message-box-icon">
+      <div class="message-box-icon" @click="uploadPopup = true">
         <ion-icon name="attach-outline"></ion-icon>
       </div>
     </div>
@@ -534,22 +619,158 @@ export default {
       inlineEmojiSearchText: "",
       inlineEmojiIndex: 0,
 
-      showEmojiPicker: false
+      showEmojiPicker: false,
+
+      uploadPopup: false,
+      uploadingPopup: false,
+      uploadedFile: null,
+
+      ignoreScrollEvents: false,
+
+      sharedImgPopup: ''
 
     }
   },
   methods: {
 
-    messageBoxInput(){
+    getEmbeds(message){
 
-      let searchText = app.newMessageText.slice(0,document.getElementById('messageInput').selectionStart);
+      let embeds = [];
 
-      if(/:[A-Za-z0-9-]{1,}$/.test(searchText)){
+      /* Youtube embeds */
+      let search1 = Array.from(message.matchAll(/((http)(s|)(:\/\/)(www\.|)youtube\.com\/watch\?v=)([A-Za-z0-9]*)/g));
+      let search2 = Array.from(message.matchAll(/(http)(s|)(:\/\/)(www\.|)youtu\.be\/([A-Za-z0-9]*)/g));
+      let results = search1.concat(search2);
+
+      results = [...new Set(results.map((r) => r[r.length-1]))];
+      results.forEach((yt) => {
+        embeds.push({
+          type:"youtube",
+          video:yt
+        });
+      });
+
+      return embeds;
+
+
+    },
+
+    processTextMessage(message) {
+
+      var htmlEscapes = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;',
+        '+': "&#43;"
+      };
+
+      var htmlEscaper = /[+&<>"']/g;
+
+      var message = ('' + message).replace(htmlEscaper, function(match) {
+        return htmlEscapes[match];
+      });
+
+      //Allow in-text formatting
+      var specialOperators = {
+        '_': 'i',
+        '*': 'b',
+        '~':'s'
+      };
+
+      Object.keys(specialOperators).forEach((symbol) => {
+        let tag = specialOperators[symbol];
+        message = message.replaceAll(RegExp('(?:['+symbol+'])([^'+symbol+']*)(?:['+symbol+'])','g'),(e) => '<'+tag+'>'+e.replaceAll(RegExp('(^(['+symbol+']))|((['+symbol+'])$)','g'),"")+'</'+tag+'>');
+      });
+
+      //Make links link!
+      message = message.replaceAll(/(http)(s|)(:\/\/)[A-Za-z0-9_/=.&+?-]*/g,"<a target='_blank' href='$&'>$&</a>");
+
+
+      return message;
+    },
+
+    fileDropHandler(ev) {
+
+      ev.preventDefault();
+
+      if (ev.dataTransfer.items) {
+        for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+          if (ev.dataTransfer.items[i].kind === 'file') {
+            var file = ev.dataTransfer.items[i].getAsFile();
+            app.uploadedFile = file;
+          }
+        }
+      } else {
+        app.uploadedFile = ev.dataTransfer.files[0];
+      }
+
+      if (app.uploadedFile !== null) {
+        app.uploadAttachment();
+      }
+
+    },
+
+    formatFileName(name) {
+
+      let firstPart = name.split(".").slice(0, name.split(".").length - 1).join(".");
+      let ext = name.split(".").slice(name.split(".").length - 1).join(".");
+
+      if (firstPart.length > 15) {
+        firstPart = firstPart.slice(0, 7) + "..." + firstPart.slice(firstPart.length - 7);
+      }
+
+      return firstPart + "." + ext;
+
+    },
+
+    displayError(errorText) {
+      document.getElementById('error-alert-text').innerText = errorText;
+      document.getElementById('error-alert').style.display = 'flex';
+    },
+
+    uploadAttachment() {
+
+      app.uploadPopup = false;
+
+      if (app.uploadedFile.size > 1000000) { //Max 1MB
+        app.displayError("Oh no! Your file is too large to send.");
+      } else {
+
+        app.uploadingPopup = true;
+
+        app.createAttachmentObject(app.uploadedFile).then((attachmentObj) => {
+
+          app.api_request("POST", "/meetings/" + app.meeting_id + "/sendMessage", attachmentObj).then((resp) => {
+            app.wait(500).then(() => {
+              app.uploadingPopup = false;
+            });
+            resp = JSON.parse(resp);
+            if (resp.status !== "success") {
+              if (resp.error == "Message too large") {
+                app.displayError("Oh no! Your file is too large to send.");
+              } else {
+                app.displayError("Oh no! Your file failed send.");
+              }
+            }
+            app.getChatMessages();
+          });
+
+        });
+
+      }
+    },
+
+    messageBoxInput() {
+
+      let searchText = app.newMessageText.slice(0, document.getElementById('messageInput').selectionStart);
+
+      if (/:[A-Za-z0-9-]{1,}$/.test(searchText)) {
         app.inlineEmojiSearchText = searchText.match(/:[A-Za-z0-9-]{1,}$/)[0];
         app.inlineEmojiIndex = 0;
         document.querySelector('.inline-emoji-picker').scrollLeft = 0;
-      }
-      else{
+      } else {
         app.inlineEmojiSearchText = "";
       }
 
@@ -588,7 +809,9 @@ export default {
 
       if (srcount > 0) {
         event.preventDefault();
-        document.querySelector('.inline-emoji-picker .emoji-item.active').scrollIntoView();
+        this.$nextTick(() => {
+          document.querySelector('.inline-emoji-picker .emoji-item.active').scrollIntoView();
+        });
       }
 
     },
@@ -598,6 +821,11 @@ export default {
       let results = [];
 
       if (term.length > 0) {
+
+        if (term[0] == ":") {
+          term = term.slice(1);
+        }
+
         Object.values(this.getEmojis()).forEach((cat) => {
           cat.forEach((e) => {
             if (e.shortcode.includes(term)) {
@@ -624,6 +852,13 @@ export default {
       if (!app.isMouseOverEl(event, "emojiPickerButton") && !app.isMouseOverEl(event, "emojiPicker")) {
         app.showEmojiPicker = false;
       }
+      if (!app.isMouseOverEl(event, "uploadPopup")) {
+        app.uploadPopup = false;
+      }
+      if (!app.isMouseOverEl(event, "sharedImgPopup")) {
+        app.sharedImgPopup = '';
+      }
+
 
     },
 
@@ -641,7 +876,7 @@ export default {
       if (isBottom) {
         app.autoscroll = true;
         app.showNewMessageAlert = false;
-      } else {
+      } else if (!app.ignoreScrollEvents) {
         app.autoscroll = false;
       }
 
@@ -655,11 +890,13 @@ export default {
         var moveBy = Math.ceil(amount / 100);
       }
       var count = 0;
+      app.ignoreScrollEvents = true;
 
       var scrollInterval = setInterval(() => {
 
         if (count >= amount) {
           clearInterval(scrollInterval);
+          app.ignoreScrollEvents = false;
         } else {
           el.scrollTop += moveBy;
           count += moveBy;
@@ -688,6 +925,35 @@ export default {
           app.getChatMessages();
         });
       }
+
+    },
+
+    downloadAttachment(attachment_id, keys, priv_key, attachment_info) {
+
+      app.api_request("POST", '/meetings/downloadAttachment', {
+        attachment_id: attachment_id
+      }).then((resp) => {
+
+        resp = JSON.parse(resp);
+
+        if (resp.status == "success") {
+
+          let file = app.decryptAttachment(resp.content_base64, keys, priv_key, attachment_info);
+
+          var element = document.createElement('a');
+          element.setAttribute('href', URL.createObjectURL(file));
+          element.setAttribute('download', file.name);
+          element.style.display = 'none';
+          document.body.appendChild(element);
+          element.click();
+          document.body.removeChild(element);
+
+
+        } else {
+          app.displayError("There was a problem downloading this attachment");
+        }
+
+      });
 
     },
 
@@ -737,6 +1003,28 @@ export default {
               }
             }
 
+
+            if (message.type == "attachment") {
+
+              let attachment = app.decryptAttachment(message.content.content_base64, message.content.keys, message.content.priv_key, {
+                name: message.content.attachment_name,
+                mime_type: message.content.attachment_mime_type,
+                size: message.content.attachment_size,
+                attachment_id: message.content.attachment_id
+              });
+
+              app.messages[message.id] = {
+                type: "attachment",
+                timestamp: message.timestamp,
+                from: message.from,
+                last_modified: message.content.last_modified,
+                attachment: attachment,
+                objectURL: ((app.img_mimes.includes(attachment.type)) ? URL.createObjectURL(attachment) : '')
+              }
+
+
+            }
+
           });
 
           if (Object.keys(app.messages).length !== initialMessageCount && (!app.sidebarOpen || app.settingsOpen)) {
@@ -765,7 +1053,7 @@ export default {
 
     copyText(el) {
 
-      navigator.clipboard.writeText(app.joinLinkURL + app.meeting.join_link)
+      navigator.clipboard.writeText(app.joinLinkURL + app.meeting.join_link);
 
       document.getElementById(el).style.display = 'block';
       setTimeout(() => {

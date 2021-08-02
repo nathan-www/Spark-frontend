@@ -450,6 +450,10 @@ body {
 @use './../assets/scss/_theme' as *;
 @use './../assets/scss/_elements' as *;
 
+.main{
+  background-color: #000;
+}
+
 .login-section {
     margin: auto;
     text-align: center;
