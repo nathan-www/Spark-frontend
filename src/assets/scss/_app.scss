@@ -974,6 +974,7 @@
 .youtube-embed{
 
   margin-top: 10px;
+  height: 150px;
 
   iframe{
     width: 100%;
@@ -981,15 +982,6 @@
   }
 }
 
-.twitter-embed{
-
-  margin-top: 10px;
-
-  iframe{
-    width: 100%;
-    border-radius: 10px;
-  }
-}
 
 @keyframes scrollDown {
   0% {

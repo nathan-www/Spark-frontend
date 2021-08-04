@@ -915,7 +915,13 @@ export default {
     },
 
     participantById(id) {
-      return app.meeting.participants.filter((i) => i.user_id == id)[0];
+      let results =  app.meeting.participants.filter((i) => i.user_id == id);
+      if(results.length > 0){
+        return results[0];
+      }
+      else{
+        return {first_name: "Unknown"};
+      }
     },
 
     sendChatMessage(message) {
