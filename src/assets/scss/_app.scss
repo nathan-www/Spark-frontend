@@ -16,6 +16,7 @@
   flex-shrink: 0;
   width: calc(100vw - 400px);
   transition: width ease-in-out 0.35s;
+  overflow: hidden;
 
   &:not(.chat-open) {
     width: 100vw;
@@ -285,6 +286,24 @@
     transition: box-shadow 0.2s;
     position: relative;
 
+    &.off{
+      .disabled{
+        display: block;
+      }
+    }
+
+    .disabled{
+      display: none;
+      position: absolute;
+      left: 2.5px;
+      bottom: 50%;
+      width: calc(100% - 5px);
+      height: 3px;
+      background-color: $danger;
+      transform: translateY(50%) rotate(45deg);
+      border-radius: 50px;
+    }
+
     .badge {
       position: absolute;
       top: -3px;
@@ -396,6 +415,10 @@
 
       &.offline {
         background-color: $text-grey;
+      }
+
+      &.in-call {
+        background-color: $danger;
       }
     }
   }
@@ -529,6 +552,10 @@
 
       &.online {
         background-color: $success;
+      }
+
+      &.in-call {
+        background-color: $danger;
       }
     }
   }
@@ -971,18 +998,290 @@
   }
 }
 
-.youtube-embed{
-
+.youtube-embed {
   margin-top: 10px;
   height: 150px;
 
-  iframe{
+  iframe {
     width: 100%;
     border-radius: 10px;
   }
 }
 
 
+.video-area {
+  height: calc(100% - 80px);
+  width: 100%;
+  background-color: $bg-secondary;
+
+  .video-card {
+    position: relative;
+
+    .user-shy{
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+      height: 100px;
+      width: 100px;
+      font-size: 30px;
+      font-weight: 400;
+      background-color: $primary;
+      border-radius: 50%;
+      text-align: center;
+      border: 3px solid $success-dark;
+
+      transition: border-color 0.2s;
+
+      span{
+        color: #efefef;
+      }
+    }
+
+    video {
+      object-fit: cover;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .video-card-volume-buttons-right{
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+    }
+
+    .video-card-btn{
+      height: 26px;
+      width: 26px;
+      background-color: rgba($bg-main,0.6);
+      border-radius: 7px;
+      color: #efefef;
+      margin-left: 5px;
+      --ionicon-stroke-width: 45px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      position: relative;
+
+      &:hover{
+        background-color: $bg-main;
+      }
+
+      ion-icon{
+        margin: auto;
+      };
+    }
+
+    .volume-slider{
+      position: absolute;
+      top: -5px;
+      left: 13px;
+      border-radius: 10px;
+
+      transform: translateY(-100%) translateX(-50%);
+
+      width: 5px;
+      background-color: rgba(255,255,255,0.18);
+
+      &-active{
+        position: absolute;
+        left: 0px;
+        bottom: 0px;
+        width: 5px;
+        border-radius: 0px 0px 10px 10px;
+        background-color: rgba(255,255,255,0.4);
+      }
+
+      .volume-slider-handle{
+        position: absolute;
+        left: -3.5px;
+        width: 12px;
+        height: 12px;
+        background-color: #efefef;
+        border-radius: 50%;
+      }
+    }
+
+    .video-card-nametag {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      padding: 6px 8px;
+      background-color: rgba($bg-main,0.6);
+      border-radius: 7px;
+
+      .off-icon{
+        color: $danger;
+        margin-left: 5px;
+      }
+
+      p {
+        color: #efefef;
+        font-weight: normal;
+        font-size: 11px;
+      }
+
+      .nametag-spot {
+        height: 6px;
+        width: 6px;
+        background-color: $success;
+        border-radius: 50%;
+        margin-left: 6px;
+        box-shadow: 0px 0px 4px rgba(111, 207, 151, 0.5);
+      }
+    }
+  }
+}
+
+.join-meeting-dialog-container.v-center {
+  height: calc(100% - 80px);
+
+  .btn.v-small {
+    padding: 6px 12px;
+  }
+
+  .join-btn {
+    margin-top: 30px;
+    text-align: center;
+    display: block;
+    width: 220px;
+  }
+
+  .icon-container {
+    width: 25px;
+    color: #efefef;
+  }
+
+  .join-meeting-dialog {
+    h2 {
+      color: #efefef;
+      font-weight: 500;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    h3 {
+      color: #efefef;
+      font-weight: 500;
+      font-size: 16px;
+    }
+
+    p {
+      color: $text-grey;
+      font-size: 15px;
+
+      &.explainer {
+        margin-bottom: 20px;
+      }
+    }
+
+    .divider {
+      border-bottom: 1px solid $border-grey;
+      margin: 10px 0;
+    }
+    max-width: 575px;
+    margin: auto;
+    background-color: $bg-secondary;
+    padding: 30px;
+    border-radius: 10px;
+  }
+}
+
+.mic-level {
+  margin-top: 10px;
+
+  .mic-level-chip {
+    flex-shrink: 0;
+    width: 15px;
+    height: 3px;
+    margin-right: 2px;
+    background-color: $mic-level-chip;
+    transition: background-color 0.2s;
+
+    &.active {
+      background-color: $success;
+    }
+
+    &.color--warning.active {
+      background-color: $warning;
+    }
+  }
+}
+
+.camera-preview {
+  margin-top: 5px;
+  height: 100px;
+  background-color: $element-dark;
+  border-radius: 7px;
+}
+
+.device-dropdown {
+  margin-left: 10px;
+  font-weight: 400;
+  font-size: 13px;
+  color: $text-grey;
+  cursor: pointer;
+  position: relative;
+
+  .device-active-label{
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 260px;
+    overflow: hidden;
+  }
+
+  .dropdown-area{
+
+    position: absolute;
+    bottom: -5px;
+    left: 0px;
+    background-color: $bg-main;
+    border: 1px solid $border-grey;
+    transform: translateY(100%);
+    width: 250px;
+    padding: 5px;
+    border-radius: 7px;
+
+    .item{
+      padding: 5px 8px;
+      border-radius: 7px;
+      color: #fff;
+
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      width: 100%;
+      overflow: hidden;
+      transition: background-color 0.2s;
+      cursor: pointer;
+
+      &:hover{
+        background-color: $element-dark;
+      }
+    }
+  }
+
+  ion-icon {
+    margin-left: 5px;
+  }
+
+  select {
+    appearance: none;
+    border: 0;
+    background-color: transparent;
+    font-weight: 400;
+    font-size: 13px;
+    color: $text-grey;
+    cursor: pointer;
+    width: 170px;
+    position: relative;
+    z-index: 2;
+    padding-right: 23px;
+  }
+}
+
+.device-checkmark {
+  --ionicon-stroke-width: 45px;
+}
 @keyframes scrollDown {
   0% {
     transform: translateY(0px);

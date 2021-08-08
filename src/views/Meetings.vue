@@ -275,8 +275,11 @@
           <div class="p-icon" v-for="p in meeting.participants" :style="'background-color:' + conveyor('meeting-cards',p.user_id,['#d9730d','#dfab01','#0f7b6c','#0b6e99','#6940a5','#ad1a72','#e03e3e'])"
             :data-tooltip="p.first_name + ' ' + p.last_name">
             {{p.first_name[0].toUpperCase()}}{{p.last_name[0].toUpperCase()}}
-            <div v-if="p.last_seen > (Math.round(new Date().getTime()/1000) - 120)" class="status-spot online"></div>
-            <div v-else class="status-spot offline" data-tooltip="Not currently in the meeting"></div>
+
+            <div v-if="p.last_seen > (Math.round(new Date().getTime()/1000) - 45) && p.status == 'in-call'" class="status-spot in-call" data-tooltip="In call"></div>
+            <div v-else-if="p.last_online > (Math.round(new Date().getTime()/1000) - 45)" class="status-spot online" data-tooltip="Online"></div>
+            <div v-else class="status-spot offline" data-tooltip="Offline"></div>
+
           </div>
 
           <div class="v-center additional-participants" v-if="meeting.invitees.length > 0">+{{meeting.invitees.length}}</div>
@@ -649,7 +652,7 @@ export default {
 
   mounted() {
 
-    app = this;
+    window.app = this;
 
     //Reload account, sessions and meetings every 30 sec
     app.interval = setInterval(() => {
@@ -712,6 +715,9 @@ body {
 
         &.online {
             background-color: $success;
+        }
+        &.in-call{
+          background-color: $danger;
         }
     }
 }

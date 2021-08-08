@@ -10,7 +10,7 @@ var Mixins = {
         setters: {}
       },
 
-      img_mimes: ['image/gif','image/png','image/jpg','image/jpeg'],
+      img_mimes: ['image/gif', 'image/png', 'image/jpg', 'image/jpeg'],
 
       document: document,
       console: console,
@@ -19,6 +19,8 @@ var Mixins = {
   },
 
   mounted() {
+
+    window.api_queue = [];
 
     setInterval(() => {
       let tooltipEls = document.querySelectorAll('[data-tooltip]');
@@ -40,16 +42,47 @@ var Mixins = {
   },
   methods: {
 
-    formatFileSize: function(bytes){
+    changeSliderYPos(el, event, amount = null) {
 
-      if(bytes < 1000){
+      if (amount == null) {
+        amount = el.getBoundingClientRect()['bottom'] - event.clientY;
+      }
+
+      if (amount > 106) {
+        amount = 106;
+      }
+      if (amount < 6) {
+        amount = 6;
+      }
+
+      amount -= 6;
+
+      if (amount < 1) {
+        el.parentElement.querySelector('.volume-icon').name = 'volume-off';
+      } else if (amount < 40) {
+        el.parentElement.querySelector('.volume-icon').name = 'volume-low';
+      } else if (amount < 80) {
+        el.parentElement.querySelector('.volume-icon').name = 'volume-medium';
+      } else {
+        el.parentElement.querySelector('.volume-icon').name = 'volume-high';
+      }
+
+      let vidEl = el.parentElement.parentElement.parentElement.querySelector('video');
+      el.parentElement.parentElement.parentElement.querySelector('video').volume = Math.floor(amount) / 100;
+
+      el.querySelector('.volume-slider-handle').style.bottom = amount + "px";
+      el.querySelector('.volume-slider-active').style.height = amount + "px";
+
+    },
+
+    formatFileSize: function(bytes) {
+
+      if (bytes < 1000) {
         return bytes + "B";
-      }
-      else if(bytes < 1000000){
-        return Math.round(bytes/100)/10 + "KB";
-      }
-      else{
-        return Math.round(bytes/100000)/10 + "MB";
+      } else if (bytes < 1000000) {
+        return Math.round(bytes / 100) / 10 + "KB";
+      } else {
+        return Math.round(bytes / 100000) / 10 + "MB";
       }
 
     },
@@ -184,29 +217,54 @@ var Mixins = {
       let csrf_token = Math.round(Math.random() * 1000000000000);
       document.cookie = "spark_CSRFToken=" + csrf_token;
 
-      if (method == "GET") {
-        return fetch(api_base + endpoint, {
-          method: "GET",
-          headers: {
-            'X-CSRF-TOKEN': csrf_token
-          },
-          credentials: 'include'
-        }).then((t) => t.text());
-      }
+      //Allow three requests in queue
+      if (api_queue.reduce((a,q) => { if(q == endpoint){ return a+1; } else{ return a; } },0) < 4 ) {
 
-      if (method == "POST") {
-        return fetch(api_base + endpoint, {
-          method: "POST",
-          headers: {
-            'X-CSRF-TOKEN': csrf_token,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include',
-          body: JSON.stringify(data)
-        }).then((t) => t.text());
-      }
+        api_queue.push(endpoint);
 
+        if (method == "GET") {
+          return fetch(api_base + endpoint, {
+            method: "GET",
+            headers: {
+              'X-CSRF-TOKEN': csrf_token
+            },
+            credentials: 'include'
+          }).then((t) => {
+            api_queue = api_queue.filter((q) => q !== endpoint);
+            return t.text();
+          }).catch((e) => {
+            api_queue = api_queue.filter((q) => q !== endpoint);
+          });
+        }
+
+        if (method == "POST") {
+          return fetch(api_base + endpoint, {
+            method: "POST",
+            headers: {
+              'X-CSRF-TOKEN': csrf_token,
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(data)
+          }).then((t) => {
+            api_queue.splice(api_queue.indexOf(endpoint),1)
+            return t.text();
+          }).catch((e) => {
+            api_queue.splice(api_queue.indexOf(endpoint),1)
+          });
+
+        }
+
+
+      }
+      else{
+
+        return new Promise(function(resolve, reject) {
+          reject("API queue full");
+        });
+
+      }
     },
 
     wait: function(ms) {

@@ -3,6 +3,8 @@
   <img src="./../assets/img/emoji/monkey.png" alt="">
 </div>
 
+<video id="autoplayVideo" style="display: none;"></video>
+
 <div id="error-alert" class="flex fadeIn">
   <div class="icon-zone v-center">
     <ion-icon name="alert-circle-outline"></ion-icon>
@@ -73,7 +75,7 @@
 
 
 
-<div class="main flex" @mousedown="mainClick($event)">
+<div class="main flex" @mousedown="mainClick($event)" @mouseup="sliderButtonDown = null" @mousemove="if($event.buttons == 1 && sliderButtonDown !== null){ changeSliderYPos($refs['slider'+sliderButtonDown],$event); }">
 
   <div v-if="inviteModelOpen" class="popup-backdrop fadeIn" @click="peopleSearchResults = []" style="display: block;"></div>
 
@@ -157,6 +159,154 @@
 
   <div :class="'meeting-section' + ((sidebarOpen) ? ' chat-open':'')">
 
+    <div class="video-area flex" v-if="call.inCall" id="videoArea">
+
+    <template v-for="(video,i) in call.participant_streams">
+
+      <div :class="'video-card' + ((video.large) ? ' large':'')">
+
+        <video v-show="!meeting.participants.filter((p) => p.user_id == i)[0].cam_off" :srcObject="video.stream" onloadstart="this.volume=0.75" autoplay disablePictureInPicture></video>
+
+        <div class="user-shy v-center" :style="((video.micLevel < 5) ? 'border-color: transparent':'')" :data-mic="video.micLevel" v-if="meeting.participants.filter((p) => p.user_id == i)[0].cam_off">
+          <span>
+            {{ meeting.participants.filter((p) => p.user_id == i)[0].first_name[0].toUpperCase() }}{{ meeting.participants.filter((p) => p.user_id == i)[0].last_name[0].toUpperCase() }}
+          </span>
+        </div>
+
+
+        <div class="video-card-nametag flex" v-if="meeting.participants.filter((p) => p.user_id == i).length > 0">
+          <div class="v-center">
+            <p>{{meeting.participants.filter((p) => p.user_id == i)[0]['first_name']}}</p>
+          </div>
+          <div class="v-center off-icon" v-if="meeting.participants.filter((p) => p.user_id == i)[0].mute">
+            <ion-icon name="mic-off"></ion-icon>
+          </div>
+          <div class="v-center off-icon" v-if="meeting.participants.filter((p) => p.user_id == i)[0].cam_off">
+            <ion-icon name="videocam-off"></ion-icon>
+          </div>
+          <div class="v-center">
+            <div class="nametag-spot"></div>
+          </div>
+        </div>
+
+        <div class="flex video-card-volume-buttons-right">
+          <div v-if="!video.large" class="video-card-btn v-center" @click="Object.keys(call.participant_streams).forEach((id) => {call.participant_streams[id].large = false;}); call.participant_streams[i].large = true;">
+            <ion-icon name="expand-outline"></ion-icon>
+          </div>
+          <div v-else class="video-card-btn v-center" @click="call.participant_streams[i].large = false;">
+            <ion-icon name="contract-outline"></ion-icon>
+          </div>
+          <div class="video-card-btn v-center" @click="video.showVolSlider = true">
+
+            <div class="volume-slider" :ref="'slider'+i" style="height: 112px" @mousedown="changeSliderYPos($refs['slider'+i],$event); sliderButtonDown = i;" @mouseover="video.volSliderHovered = true" @mouseout="video.volSliderHovered = false" v-show="video.showVolSlider">
+              <div class="volume-slider-handle" @mousedown="sliderButtonDown = null;" style="bottom: 75px;"></div>
+              <div class="volume-slider-active" style="height: 75px;"></div>
+            </div>
+
+            <ion-icon name="volume-medium" class="volume-icon"></ion-icon>
+          </div>
+        </div>
+
+      </div>
+
+    </template>
+
+    </div>
+
+
+    <div class="join-meeting-dialog-container v-center" v-else>
+
+      <div class="join-meeting-dialog">
+        <h2>Join the meeting</h2>
+
+        <p class="explainer">Allow access to your camera and microphone to participate in the meeting</p>
+
+        <div class="flex">
+          <div class="v-center icon-container">
+            <ion-icon name="videocam"></ion-icon>
+          </div>
+          <div class="v-center">
+            <h3>Camera</h3>
+          </div>
+
+          <div class="v-center" v-if="call.availableDevices['video'].length > 0">
+            <div class="device-dropdown flex">
+              <div class="v-center device-active-label" @click="dropdownAreaVideo = true">
+                {{ call.availableDevices['video'].filter((d) => d.current)[0].label }}
+              </div>
+              <div class="v-center" @click="dropdownAreaVideo = true">
+                <ion-icon name="chevron-down"></ion-icon>
+              </div>
+              <div class="dropdown-area" id="dropdownAreaVideo" v-if="dropdownAreaVideo">
+                <div class="item" v-for="device in call.availableDevices['video']" @click="changeDevice('video', device.id); dropdownAreaVideo = false;">
+                  {{device.label}}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="v-center" style="margin-left: auto;" @click="allowMicCamera()" v-if="call.currentStream == null">
+            <a class="btn btn-vsmall btn-success">Allow</a>
+          </div>
+          <div style="margin-left: auto;" class="v-center color--success device-checkmark" v-else>
+            <ion-icon name="checkmark-outline"></ion-icon>
+          </div>
+        </div>
+
+        <video class="camera-preview" style="margin-left: 25px;" v-if="call.currentStream !== null" :srcObject="call.currentStream" autoplay muted></video>
+
+
+        <div class="divider"></div>
+
+        <div class="flex">
+          <div class="v-center icon-container">
+            <ion-icon name="mic"></ion-icon>
+          </div>
+          <div class="v-center">
+            <h3>Microphone</h3>
+          </div>
+
+          <div class="v-center" v-if="call.availableDevices['audio'].length > 0">
+            <div class="device-dropdown flex">
+              <div class="v-center device-active-label" @click="dropdownAreaAudio = true">
+                {{ call.availableDevices['audio'].filter((d) => d.current)[0].label }}
+              </div>
+              <div class="v-center" @click="dropdownAreaAudio = true">
+                <ion-icon name="chevron-down"></ion-icon>
+              </div>
+              <div class="dropdown-area" id="dropdownAreaAudio" v-if="dropdownAreaAudio">
+                <div class="item" v-for="device in call.availableDevices['audio']" @click="changeDevice('audio', device.id); dropdownAreaAudio = false;">
+                  {{device.label}}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="v-center" style="margin-left: auto;" @click="allowMicCamera()" v-if="call.currentStream == null">
+            <a class="btn btn-vsmall btn-success">Allow</a>
+          </div>
+          <div style="margin-left: auto;" class="v-center color--success device-checkmark" v-else>
+            <ion-icon name="checkmark-outline"></ion-icon>
+          </div>
+        </div>
+
+        <div class="mic-level flex" style="margin-left: 25px;" v-if="call.currentStream !== null">
+          <template v-for="i in 20">
+            <div :class="'mic-level-chip' + ((call.micLevel > i*7.5) ? ' active':'') + ((i > 15) ? ' color--warning':'')"></div>
+          </template>
+        </div>
+
+
+        <a class="btn btn-primary join-btn" v-if="call.currentStream !== null" @click="call.inCall = true">
+          Join meeting
+        </a>
+
+      </div>
+
+
+
+    </div>
+
     <div class="control-bar flex">
       <div class="v-center">
         <div>
@@ -192,17 +342,22 @@
 
 
       <div class="button-group-center flex">
-        <div class="v-center">
-          <div class="circle-icon v-center">
-            <ion-icon name="mic"></ion-icon>
-          </div>
-        </div>
 
-        <div class="v-center">
-          <div class="circle-icon v-center">
-            <ion-icon name="videocam"></ion-icon>
+        <template v-if="call.currentStream !== null">
+          <div class="v-center">
+            <div :class="'circle-icon v-center' + ((call.currentStream.getAudioTracks()[0].enabled) ? '':' off')" @click="call.currentStream.getAudioTracks()[0].enabled = !call.currentStream.getAudioTracks()[0].enabled; $forceUpdate()">
+              <ion-icon name="mic"></ion-icon>
+              <div class="disabled"></div>
+            </div>
           </div>
-        </div>
+
+          <div class="v-center">
+            <div :class="'circle-icon v-center' + ((call.currentStream.getVideoTracks()[0].enabled) ? '':' off')" @click="call.currentStream.getVideoTracks()[0].enabled = !call.currentStream.getVideoTracks()[0].enabled; $forceUpdate()">
+              <ion-icon name="videocam"></ion-icon>
+              <div class="disabled"></div>
+            </div>
+          </div>
+        </template>
 
         <div class="v-center">
           <div class="circle-icon v-center">
@@ -210,8 +365,8 @@
           </div>
         </div>
 
-        <div class="v-center">
-          <div class="circle-icon hangup v-center">
+        <div class="v-center" v-if="call.inCall">
+          <div class="circle-icon hangup v-center" @click="call.inCall = false">
             <ion-icon name="call"></ion-icon>
           </div>
         </div>
@@ -272,10 +427,12 @@
           <div class="participant-list">
             <div class="participant-item flex" v-for="p in meeting.participants">
               <div class="v-center">
-                <div class="participant-icon" :style="'background-color:' + conveyor('settings-participants',p.user_id,['#d9730d','#dfab01','#0f7b6c','#0b6e99','#6940a5','#ad1a72','#e03e3e'])">
+                <div class="participant-icon" :style="'background-color:' + conveyor('settings-participants','settings-'+p.user_id,['#d9730d','#dfab01','#0f7b6c','#0b6e99','#6940a5','#ad1a72','#e03e3e'])">
                   {{p.first_name[0].toUpperCase()}}{{p.last_name[0].toUpperCase()}}
-                  <div v-if="p.last_seen > (Math.round(new Date().getTime()/1000) - 120)" class="participant-icon-status online"></div>
-                  <div v-else class="participant-icon-status offline"></div>
+
+                  <div v-if="p.last_seen > (Math.round(new Date().getTime()/1000) - 45) && p.status == 'in-call'" class="participant-icon-status in-call" data-tooltip="In call"></div>
+                  <div v-else-if="p.last_online > (Math.round(new Date().getTime()/1000) - 45)" class="participant-icon-status online" data-tooltip="Online"></div>
+                  <div v-else class="participant-icon-status offline" data-tooltip="Offline"></div>
                 </div>
               </div>
               <div class="v-center">
@@ -392,7 +549,10 @@
     <div class="messages-area" @scroll="scrollEvent()">
 
 
-      <template v-for="message in messages" :key="message.id">
+      <template v-for="(message,i) in messages" :key="message.id">
+
+        <div class="p-separator" v-if="Object.keys(messages).indexOf(i)>0 && messages[Object.keys(messages)[Object.keys(messages).indexOf(i)-1]].from !== message.from"></div>
+
 
         <div class="message-announcement" v-if="message.type == 'announcement'">
           <ion-icon v-if="message.icon !== ''" :name="message.icon"></ion-icon> {{message.announcement}}
@@ -555,6 +715,9 @@
 </template>
 
 <script>
+
+import VideoMixin from './../mixins/video.js';
+
 export default {
   name: 'Meeting',
   computed: {
@@ -568,8 +731,12 @@ export default {
       return this.$route.params.meeting_id;
     }
   },
+  mixins: [ VideoMixin ],
   data() {
     return {
+
+      document: document,
+
       sidebarOpen: true,
 
       account: {
@@ -627,11 +794,50 @@ export default {
 
       ignoreScrollEvents: false,
 
-      sharedImgPopup: ''
+      sharedImgPopup: '',
+
+      sliderButtonDown: null,
+
+      videoCardNum: 0,
+
+      dropdownAreaVideo: false,
+      dropdownAreaAudio: false,
 
     }
   },
   methods: {
+
+
+    resizeVideoCards(){
+
+      if(document.getElementById('videoArea') !== null){
+
+
+        let numCards = document.getElementById('videoArea').querySelectorAll('.video-card').length;
+
+        if(numCards !== app.videoCardNum){
+
+          app.videoCardNum = numCards;
+
+          let numX = Math.ceil(Math.sqrt(numCards));
+          let numY = Math.ceil(numCards/Math.ceil(Math.sqrt(numCards)));
+
+          Array.from(document.getElementById('videoArea').querySelectorAll('.video-card')).forEach((c) => {
+            c.style.height = Math.floor(100/numY) + "%";
+            c.style.width = Math.floor(100/numX) + "%";
+          });
+
+        }
+    }
+
+    },
+
+    allowMicCamera(){
+
+      document.getElementById('autoplayVideo').play();
+      this.getDevicePermission();
+
+    },
 
     getEmbeds(message){
 
@@ -858,6 +1064,21 @@ export default {
       if (!app.isMouseOverEl(event, "sharedImgPopup")) {
         app.sharedImgPopup = '';
       }
+      if (!app.isMouseOverEl(event, "dropdownAreaVideo")) {
+        app.dropdownAreaVideo = false;
+      }
+      if (!app.isMouseOverEl(event, "dropdownAreaAudio")) {
+        app.dropdownAreaAudio = false;
+      }
+
+
+      Object.keys(app.call.participant_streams).forEach((i) => {
+        let video = app.call.participant_streams[i];
+        if(!video.hasOwnProperty('volSliderHovered') || !video.volSliderHovered){
+          app.call.participant_streams[i].showVolSlider = false;
+        }
+      });
+
 
 
     },
@@ -1263,7 +1484,7 @@ export default {
   mounted() {
 
 
-    app = this;
+    window.app = this;
     app.loadAccount();
     app.loadMeeting();
     app.loadMeetings();
@@ -1283,6 +1504,8 @@ export default {
 
     app.messageAreaInterval = setInterval(() => {
 
+      app.resizeVideoCards();
+
       let maxScrollPos = document.getElementsByClassName('messages-area')[0].scrollHeight - document.getElementsByClassName('messages-area')[0].clientHeight;
       let isBottom = (Math.abs(maxScrollPos - document.getElementsByClassName('messages-area')[0].scrollTop) < 10);
 
@@ -1301,9 +1524,19 @@ export default {
     }, 10);
 
 
+
+    app.resizeVideoCards();
+
+
   }
 }
 </script>
+
+<style>
+  body{
+    overflow: hidden;
+  }
+</style>
 
 <style lang="scss" scoped>
 @use './../assets/scss/_theme' as *;
