@@ -32,7 +32,7 @@
     <h2 class="title"></h2>
   </div>
   <div class="flex popup-buttons" style="margin-left: auto; justify-content: right;">
-    <div class="v-center" style="height: auto;">
+    <div class="v-center" style="height: auto; margin-left: auto;">
       <a class="cancel-button">Cancel</a>
     </div>
     <div class="v-center" style="height: auto;">
@@ -95,7 +95,7 @@
         <div class="search-icon v-center" style="height: auto; padding-left: 10px;">
           <ion-icon name="search-outline"></ion-icon>
         </div>
-        <input v-model="newMeetingParticipantSearch" @input="peopleSearch(newMeetingParticipantSearch)" type="text" placeholder="Enter name, email, phone number">
+        <input autocomplete="off" v-model="newMeetingParticipantSearch" @input="peopleSearch(newMeetingParticipantSearch)" type="text" placeholder="Enter name, email, phone number">
 
         <div class="search-results fadeIn" v-if="peopleSearchResults.filter((i) => i.user_id !== account.userID).length > 0">
 
@@ -161,13 +161,35 @@
 
     <div class="video-area flex" v-if="call.inCall" id="videoArea">
 
-    <template v-for="(video,i) in call.participant_streams">
+    <div class="meeting-loading v-center" v-if="meeting.participants.filter((p) => p.status == 'in-call' && p.user_id !== account.userID).length !== Object.keys(call.participant_streams).length && Math.abs(call.joinCallTime - Math.round((new Date())/1000)) < 8">
+      <div>
+        <div class="superstring-indicator-light"></div>
+        <h2>Entangling superstrings...</h2>
+      </div>
+    </div>
+
+    <div class="alone v-center" v-else-if="Object.keys(call.participant_streams).length == 0">
+      <div class="inner">
+        <lottie-player
+            autoplay
+            loop
+            mode="normal"
+            src="/animations/astronaout.json"
+            style="width: 320px"
+          >
+      </lottie-player>
+      <h2>You're alone in the call</h2>
+      </div>
+
+    </div>
+
+    <template v-else v-for="(video,i) in call.participant_streams">
 
       <div :class="'video-card' + ((video.large) ? ' large':'')">
 
         <video v-show="!meeting.participants.filter((p) => p.user_id == i)[0].cam_off" :srcObject="video.stream" onloadstart="this.volume=0.75" autoplay disablePictureInPicture></video>
 
-        <div class="user-shy v-center" :style="((video.micLevel < 5) ? 'border-color: transparent':'')" :data-mic="video.micLevel" v-if="meeting.participants.filter((p) => p.user_id == i)[0].cam_off">
+        <div class="user-shy v-center" :style="((video.micLevel < 1) ? 'border-color: transparent':'')" :data-mic="video.micLevel" v-if="meeting.participants.filter((p) => p.user_id == i)[0].cam_off">
           <span>
             {{ meeting.participants.filter((p) => p.user_id == i)[0].first_name[0].toUpperCase() }}{{ meeting.participants.filter((p) => p.user_id == i)[0].last_name[0].toUpperCase() }}
           </span>
@@ -216,7 +238,19 @@
 
     <div class="join-meeting-dialog-container v-center" v-else>
 
+
       <div class="join-meeting-dialog">
+
+        <div class="in-meeting-list flex" v-if="meeting.participants.filter((p) => p.status == 'in-call' && p.user_id !== account.userID).length > 0">
+          <div class="p-icon v-center" :data-tooltip="p.first_name + ' ' + p.last_name" v-for="p in meeting.participants.filter((p) => p.status == 'in-call' && p.user_id !== account.userID)" :style="'background-color:' + conveyor('in-meeting-list','settings-'+p.user_id,['#d9730d','#dfab01','#0f7b6c','#0b6e99','#6940a5','#ad1a72','#e03e3e'])">
+            {{p.first_name[0].toUpperCase()}}{{p.last_name[0].toUpperCase()}}
+            <div class="participant-icon-status in-call" data-tooltip="In call"></div>
+          </div>
+          <div class="label v-center">
+            Already in the call
+          </div>
+        </div>
+
         <h2>Join the meeting</h2>
 
         <p class="explainer">Allow access to your camera and microphone to participate in the meeting</p>
@@ -297,9 +331,11 @@
         </div>
 
 
-        <a class="btn btn-primary join-btn" v-if="call.currentStream !== null" @click="call.inCall = true">
+        <a class="btn btn-primary join-btn" v-if="call.currentStream !== null" @click="call.inCall = true; call.joinCallTime = Math.round((new Date())/1000);">
           Join meeting
         </a>
+
+        <p class="nobody" v-if="meeting.participants.filter((p) => p.status == 'in-call' && p.user_id !== account.userID).length == 0"><img src="./../assets/img/emoji/sleeping.png" class="emoji" /> Nobody else in the call</p>
 
       </div>
 
@@ -333,7 +369,7 @@
                 </span>
               </div>
               <div class="v-center">
-                <p class="text">{{meeting.participants.length}}&nbsp;/&nbsp;{{meeting.invitees.length + meeting.participants.length}}</p>
+                <p @click="sidebarOpen = true; settingsOpen = true; settingsTab = 'participants';" class="text">{{meeting.participants.filter((p) => p.last_online > (Math.round(new Date().getTime()/1000) - 45)).length }}&nbsp;/&nbsp;{{meeting.invitees.length + meeting.participants.length}} online</p>
               </div>
             </div>
           </div>
@@ -357,13 +393,11 @@
               <div class="disabled"></div>
             </div>
           </div>
+
+
         </template>
 
-        <div class="v-center">
-          <div class="circle-icon v-center">
-            <ion-icon name="scan"></ion-icon>
-          </div>
-        </div>
+
 
         <div class="v-center" v-if="call.inCall">
           <div class="circle-icon hangup v-center" @click="call.inCall = false">
@@ -392,6 +426,7 @@
           </div>
         </div>
       </div>
+
 
     </div>
 
@@ -491,7 +526,7 @@
 
           <p class="label margin">Meeting name</p>
           <div class="form-field form-field-small">
-            <input type="text" v-model="meeting_name_temp" @input='meeting_name_temp = meeting_name_temp.replace(/[^A-Za-z0-9-\/.&@,|_+$£#%!() ]/g,"").substr(0,25)' placeholder="e.g. Awesome Team Meeting">
+            <input autocomplete="off" type="text" v-model="meeting_name_temp" @input='meeting_name_temp = meeting_name_temp.replace(/[^A-Za-z0-9-\/.&@,|_+$£#%!() ]/g,"").substr(0,25)' placeholder="e.g. Awesome Team Meeting">
             <div class="v-center" style="margin: 3px" v-if="meeting_name_temp !== meeting.title">
               <a class="btn btn-success btn-vsmall" v-if="loading_new_name" style="white-space: nowrap">Saving...&nbsp; <img class="icon loader" src="./../assets/img/loading.png" /></a>
               <a class="btn btn-success btn-vsmall" @click="newMeetingName()" v-else style="white-space: nowrap">Save</a>
@@ -537,7 +572,10 @@
 
     <div class="sidebar-header flex">
       <div class="v-center">
-        <h2>Chat</h2>
+        <div>
+          <h2>Chat</h2>
+          <p @click="sidebarOpen = true; settingsOpen = true; settingsTab = 'participants';" class="online-now-text" v-if="meeting.participants.filter((p) => p.last_online > (Math.round(new Date().getTime()/1000) - 45)).length > 1">{{meeting.participants.filter((p) => p.last_online > (Math.round(new Date().getTime()/1000) - 45)).length }} online now</p>
+        </div>
       </div>
       <div class="v-center" style="margin-left: auto;">
         <div class="close-btn v-center" @click="sidebarOpen = false">
@@ -551,7 +589,7 @@
 
       <template v-for="(message,i) in messages" :key="message.id">
 
-        <div class="p-separator" v-if="Object.keys(messages).indexOf(i)>0 && messages[Object.keys(messages)[Object.keys(messages).indexOf(i)-1]].from !== message.from"></div>
+        <div class="p-separator" v-if="Object.keys(messages).indexOf(i)>0 && messages[Object.keys(messages)[Object.keys(messages).indexOf(i)-1]].from !== message.from && messages[Object.keys(messages)[Object.keys(messages).indexOf(i)-1]].type !== 'announcement'"></div>
 
 
         <div class="message-announcement" v-if="message.type == 'announcement'">
@@ -577,7 +615,7 @@
             <div class="flex">
               <div style="margin-left: auto;" v-if="message.from == account.userID"></div>
 
-              <div :class="'bubble' + ((isJustEmojis(message.message)) ? ' emojiMessage':'')" v-html="processTextMessage(message.message)">
+              <div :class="'bubble' + ((message.isJustEmojis) ? ' emojiMessage':'')" v-html="processTextMessage(message.message)">
               </div>
             </div>
 
@@ -674,7 +712,7 @@
 
           <div class="search-bar">
             <div class="form-field form-field-small">
-              <input type="text" placeholder="Search emojis..." v-model="emojiSearchText">
+              <input autocomplete="off" type="text" placeholder="Search emojis..." v-model="emojiSearchText">
             </div>
           </div>
 
@@ -696,7 +734,7 @@
       <div v-if="showNewMessageAlert" class="scrolldown-alert" @click="scrollMessagesToBottom(); showNewMessageAlert = false;">
         New messages <ion-icon name="arrow-down"></ion-icon>
       </div>
-      <input tabindex="-1" type="text" id="messageInput" v-model="newMessageText" placeholder="Write a message..." @keyup.enter="messageBoxEnter()" @keydown.left="panInlineEmojis($event,'left')" @keydown.right="panInlineEmojis($event,'right')"
+      <input autocomplete="off" tabindex="-1" type="text" id="messageInput" v-model="newMessageText" placeholder="Write a message..." @keyup.enter="messageBoxEnter()" @keydown.left="panInlineEmojis($event,'left')" @keydown.right="panInlineEmojis($event,'right')"
         @input="messageBoxInput()">
       <div class="message-box-icon" @click="showEmojiPicker = !showEmojiPicker;" id="emojiPickerButton">
         <ion-icon name="happy-outline"></ion-icon>
@@ -717,6 +755,7 @@
 <script>
 
 import VideoMixin from './../mixins/video.js';
+import "@lottiefiles/lottie-player";
 
 export default {
   name: 'Meeting',
@@ -1221,13 +1260,19 @@ export default {
 
 
             if (message.type == "textmessage") {
+
+              let message_content = app.decryptMessage(message.content.content_base64, message.content.keys, message.content.priv_key);
+
               app.messages[message.id] = {
                 type: "textmessage",
                 timestamp: message.timestamp,
                 from: message.from,
                 last_modified: message.content.last_modified,
-                message: app.decryptMessage(message.content.content_base64, message.content.keys, message.content.priv_key)
+                message: message_content,
+                isJustEmojis: app.isJustEmojis(message_content)
               }
+
+
             }
 
 
@@ -1411,9 +1456,6 @@ export default {
     },
 
     navigate(dest) {
-      clearInterval(app.interval);
-      clearInterval(app.chatInterval);
-      clearInterval(app.messageAreaInterval);
       this.$router.push(dest);
     },
 
@@ -1441,7 +1483,7 @@ export default {
             app.meeting_name_temp = resp.meeting.title;
           }
         } else {
-          app.navigate('/meetings#meetingNotExist');
+          app.navigate('/404');
         }
 
       });
@@ -1481,6 +1523,14 @@ export default {
 
   },
 
+  beforeUnmount(){
+
+    if(window.hasOwnProperty('micNodes')){
+      window.micNodes.forEach((n) => { n.onaudioprocess = null; n = null; });
+    }
+
+  },
+
   mounted() {
 
 
@@ -1490,19 +1540,41 @@ export default {
     app.loadMeetings();
     app.getChatMessages();
 
-    app.interval = setInterval(() => {
+    if(window.hasOwnProperty('intervals')){
+      window.intervals.forEach((i) => {
+        clearInterval(i);
+      });
+    }
+    else{
+      window.intervals = [];
+    }
+
+    let mainInterval = setInterval(() => {
       app.loadAccount();
       app.loadMeeting();
     }, 30000);
 
-    app.chatInterval = setInterval(() => {
+    let chatInterval = setInterval(() => {
       app.getChatMessages();
     }, 1000);
+
+    window.intervals.push(mainInterval);
+    window.intervals.push(chatInterval);
+
+    window.intervals.push(setInterval(() => {
+      app.manageCall();
+    }, 2000));
+
+    window.intervals.push(setInterval(() => {
+      if (app.call.inCall) {
+        app.setPeer({});
+      }
+    }, 15000));
 
 
     var oldMaxscrollPos = 0;
 
-    app.messageAreaInterval = setInterval(() => {
+    let messageAreaInterval = setInterval(() => {
 
       app.resizeVideoCards();
 
@@ -1522,6 +1594,8 @@ export default {
       oldMaxscrollPos = maxScrollPos;
 
     }, 10);
+
+    window.intervals.push(messageAreaInterval);
 
 
 

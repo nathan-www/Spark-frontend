@@ -42,6 +42,11 @@ var Mixins = {
   },
   methods: {
 
+    isJustEmojis(str) {
+      let regex = new RegExp("^" + emojiStuff.emojiPattern + "{1,6}$");
+      return regex.test(str);
+    },
+
     changeSliderYPos(el, event, amount = null) {
 
       if (amount == null) {

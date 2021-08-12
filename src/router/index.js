@@ -20,6 +20,16 @@ const routes = [
     path: '/meeting/:meeting_id',
     name: "Meeting",
     component: () => import('../views/Meeting.vue')
+  },
+  {
+    path: '/:join_link(\[a-f0-9-]{10,}\)',
+    name: "JoinByLink",
+    component: () => import('../views/JoinByLink.vue')
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: "404",
+    component: () => import('../views/404.vue')
   }
 ]
 

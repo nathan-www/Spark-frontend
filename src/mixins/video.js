@@ -8,6 +8,7 @@ const VideoMixin = {
         inCall: false,
         currentStream: null,
         micLevel: 0,
+        joinCallTime: 0,
         availableDevices: {
           video: [],
           audio: []
@@ -21,20 +22,17 @@ const VideoMixin = {
 
     window.app = this;
 
+    if(!window.hasOwnProperty('micNodes')){
+      window.micNodes = [];
+    }
+
     app.initPeerJS();
 
-    setInterval(() => {
-      app.manageCall();
-    }, 2000);
-
-    setInterval(() => {
-      if (app.call.inCall) {
-        app.setPeer({});
-      }
-    }, 15000);
 
   },
   methods: {
+
+
 
     initPeerJS() {
 
@@ -64,11 +62,14 @@ const VideoMixin = {
 
             console.log("Answered call " + call.metadata.call_id);
 
-            app.audioAnalyser(stream, function(micLevel) {
+            let micNode = app.audioAnalyser(stream, function(micLevel) {
               if (app.call.participant_streams.hasOwnProperty(call.metadata.caller_peer)) {
                 app.call.participant_streams[call.metadata.caller_peer].micLevel = micLevel;
               }
             });
+
+            window.micNodes.push(micNode);
+
           });
 
         }
@@ -155,11 +156,12 @@ const VideoMixin = {
                   call_id: call_id
                 };
 
-                app.audioAnalyser(stream, function(micLevel) {
+                let micNode = app.audioAnalyser(stream, function(micLevel) {
                   if (app.call.participant_streams.hasOwnProperty(p.user_id)) {
                     app.call.participant_streams[p.user_id].micLevel = micLevel;
                   }
                 });
+                window.micNodes.push(micNode);
 
                 console.log(p.peer_id + " answered call " + call_id);
               });
@@ -186,6 +188,9 @@ const VideoMixin = {
           app.call.peer.connections[p].forEach((c) => c.close());
         });
 
+        //remove any participant streams
+        app.call.participant_streams = {};
+
       }
     },
 
@@ -202,7 +207,7 @@ const VideoMixin = {
       let analyser = audioContext.createAnalyser();
       let microphone = audioContext.createMediaStreamSource(stream);
       let javascriptNode = null;
-      javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+      javascriptNode = audioContext.createScriptProcessor(256, 1, 1);
       analyser.smoothingTimeConstant = 0.3;
       analyser.fftSize = 1024;
       microphone.connect(analyser);
@@ -226,6 +231,8 @@ const VideoMixin = {
         func(Math.floor(micLevel));
       }
 
+      return javascriptNode;
+
     },
 
     //Create a audio/video stream, requesting user permission if required
@@ -241,11 +248,12 @@ const VideoMixin = {
         //Start monitoring microphone volume level
         let analyserSession = app.call.analyserSession + 1;
         app.call.analyserSession = analyserSession;
-        app.audioAnalyser(stream, function(micLevel) {
+        let micNode = app.audioAnalyser(stream, function(micLevel) {
           if (app.call.analyserSession == analyserSession) {
             app.call.micLevel = Math.floor(micLevel);
           }
         });
+        window.micNodes.push(micNode);
 
 
 

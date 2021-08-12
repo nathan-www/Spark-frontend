@@ -25,8 +25,19 @@
 
 .sidebar {
   .sidebar-header {
-    padding: 15px 20px;
+    padding: 10px 20px;
     border-bottom: 1px solid $element-dark;
+
+    .online-now-text{
+      font-size: 12px;
+      color: $text-grey;
+      cursor: pointer;
+      transition: color 0.2s;
+
+      &:hover{
+        color: #ccc;
+      }
+    }
   }
   width: 400px;
   background-color: $bg-main;
@@ -1008,6 +1019,89 @@
   }
 }
 
+.alone{
+  width: 100%;
+
+  .inner{
+    text-align: center;
+    color: $text-grey;
+
+    lottie-player{
+      margin: 0px auto;
+    }
+
+    h2{
+      font-weight: 400;
+      font-size: 17px;
+    }
+  }
+}
+
+.meeting-loading{
+  text-align: center;
+  color: $text-grey;
+  width: 100%;
+  h2{
+    font-weight: 400;
+    font-size: 17px;
+  }
+  .superstring-indicator-light{
+    height: 25px;
+    width: 25px;
+    border-radius: 50%;
+    background-color: $success-dark;
+
+    animation: superStringAnimation 1s ease-in-out infinite;
+    margin: 0px auto 40px auto;
+  }
+}
+
+.in-meeting-list{
+
+  margin-bottom: 20px;
+
+  .p-icon{
+    width: 35px;
+    height: 35px;
+    font-size: 15px;
+    text-align: center;
+    color: #efefef;
+    border-radius: 50%;
+    margin-right: 5px;
+    position: relative;
+    font-weight: 500;
+
+    .participant-icon-status {
+      position: absolute;
+      bottom: -4px;
+      right: -5px;
+      height: 14px;
+      width: 14px;
+      border: 2px solid $bg-secondary;
+      border-radius: 50%;
+
+      &.in-call {
+        background-color: $danger;
+      }
+    }
+
+  }
+  .label{
+    height: 35px;
+    font-size: 11px;
+    color: $text-grey;
+    margin-left: 5px;
+  }
+}
+
+p.nobody{
+  font-size: 14px;
+  color: $text-grey;
+  width: 100%;
+  text-align: center;
+  margin-top: 20px;
+}
+
 
 .video-area {
   height: calc(100% - 80px);
@@ -1222,6 +1316,7 @@
   color: $text-grey;
   cursor: pointer;
   position: relative;
+  z-index: 2;
 
   .device-active-label{
     white-space: nowrap;
@@ -1317,5 +1412,17 @@
 
   100% {
     transform: translateY(-3px);
+  }
+}
+
+@keyframes superStringAnimation{
+  0%{
+    box-shadow: 0px 0px 4px $success-dark;
+  }
+  50%{
+    box-shadow: 0px 0px 14px $success-dark;
+  }
+  100%{
+    box-shadow: 0px 0px 4px $success-dark;
   }
 }

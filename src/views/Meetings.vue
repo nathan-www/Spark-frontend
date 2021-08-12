@@ -16,7 +16,7 @@
     <h2 class="title"></h2>
   </div>
   <div class="flex popup-buttons" style="margin-left: auto; justify-content: right;">
-    <div class="v-center" style="height: auto;">
+    <div class="v-center" style="height: auto; margin-left: auto;">
       <a class="cancel-button">Cancel</a>
     </div>
     <div class="v-center" style="height: auto;">
@@ -200,6 +200,13 @@
 
     <div class="sidebar-content">
 
+      <div v-if="meetings.length == 0" class="no-meetings-sidebar">
+          <div class="icon">
+            <ion-icon name="fish"></ion-icon>
+          </div>
+          <p>You aren't part of any meetings yet.</p>
+      </div>
+
       <div class="flex" v-if="meetings.filter((m) => m.is_owner).length > 0">
         <div class="v-center">
           <h3 class="sidebar-heading">Meetings you host</h3>
@@ -223,7 +230,7 @@
         </div>
       </div>
 
-      <br />
+      <br v-if="meetings.filter((m) => m.is_owner).length > 0">
 
       <div class="flex" v-if="meetings.filter((m) => !m.is_owner).length > 0">
         <div class="v-center">
@@ -257,49 +264,76 @@
 
   <div class="main-content" v-if="activePage == 'meetings'">
 
-    <h1><img src="./../assets/img/emoji/wave.png" class="emoji" /> All meetings</h1>
+    <template v-if="meetings.length > 0">
 
-    <div class="meeting-cards-container">
+      <h1><img src="./../assets/img/emoji/wave.png" class="emoji" /> All meetings</h1>
 
-      <div class="meeting-card" v-for="meeting in [...meetings].sort((a,b) => a.creation_timestamp < b.creation_timestamp)">
+      <div class="meeting-cards-container">
 
-        <div v-if="meeting.is_owner" class="delete-button" @click='confirmDialog("trash","Are you sure you want to delete this meeting?","Cancel","Delete",() => deleteMeeting(meeting.id))'>
-          <ion-icon name="trash-outline"></ion-icon>
-        </div>
-        <div v-else class="delete-button" @click='confirmDialog("trash","Are you sure you want to leave this meeting?","Cancel","Leave",() => leaveMeeting(meeting.id))'>
-          <ion-icon name="trash-outline"></ion-icon>
-        </div>
+        <div class="meeting-card" v-for="meeting in [...meetings].sort((a,b) => a.creation_timestamp < b.creation_timestamp)">
 
-        <div class="participant-icons flex">
-
-          <div class="p-icon" v-for="p in meeting.participants" :style="'background-color:' + conveyor('meeting-cards',p.user_id,['#d9730d','#dfab01','#0f7b6c','#0b6e99','#6940a5','#ad1a72','#e03e3e'])"
-            :data-tooltip="p.first_name + ' ' + p.last_name">
-            {{p.first_name[0].toUpperCase()}}{{p.last_name[0].toUpperCase()}}
-
-            <div v-if="p.last_seen > (Math.round(new Date().getTime()/1000) - 45) && p.status == 'in-call'" class="status-spot in-call" data-tooltip="In call"></div>
-            <div v-else-if="p.last_online > (Math.round(new Date().getTime()/1000) - 45)" class="status-spot online" data-tooltip="Online"></div>
-            <div v-else class="status-spot offline" data-tooltip="Offline"></div>
-
+          <div v-if="meeting.is_owner" class="delete-button" @click='confirmDialog("trash","Are you sure you want to delete this meeting?","Cancel","Delete",() => deleteMeeting(meeting.id))'>
+            <ion-icon name="trash-outline"></ion-icon>
+          </div>
+          <div v-else class="delete-button" @click='confirmDialog("trash","Are you sure you want to leave this meeting?","Cancel","Leave",() => leaveMeeting(meeting.id))'>
+            <ion-icon name="trash-outline"></ion-icon>
           </div>
 
-          <div class="v-center additional-participants" v-if="meeting.invitees.length > 0">+{{meeting.invitees.length}}</div>
-        </div>
+          <div class="participant-icons flex">
+
+            <div class="p-icon" v-for="p in meeting.participants" :style="'background-color:' + conveyor('meeting-cards',p.user_id,['#d9730d','#dfab01','#0f7b6c','#0b6e99','#6940a5','#ad1a72','#e03e3e'])"
+              :data-tooltip="p.first_name + ' ' + p.last_name">
+              {{p.first_name[0].toUpperCase()}}{{p.last_name[0].toUpperCase()}}
+
+              <div v-if="p.last_seen > (Math.round(new Date().getTime()/1000) - 45) && p.status == 'in-call'" class="status-spot in-call" data-tooltip="In call"></div>
+              <div v-else-if="p.last_online > (Math.round(new Date().getTime()/1000) - 45)" class="status-spot online" data-tooltip="Online"></div>
+              <div v-else class="status-spot offline" data-tooltip="Offline"></div>
+
+            </div>
+
+            <div class="v-center additional-participants" v-if="meeting.invitees.length > 0">+{{meeting.invitees.length}}</div>
+          </div>
 
 
-        <h2>{{meeting.title}}
-          <ion-icon v-if="meeting.is_owner" data-tooltip="You are the host" aria-label="." class="owner-icon" name="star"></ion-icon>
-        </h2>
+          <h2>{{meeting.title}}
+            <ion-icon v-if="meeting.is_owner" data-tooltip="You are the host" aria-label="." class="owner-icon" name="star"></ion-icon>
+          </h2>
 
-        <div class="flex card-bottom">
-          <p class="started-text">
-            <ion-icon name="time-outline"></ion-icon> Started {{niceTime(meeting.creation_timestamp)}}
-          </p>
-          <a class="btn btn-primary btn-small" @click="navigate('/meeting/'+meeting.id)">Join</a>
+          <div class="flex card-bottom">
+            <p class="started-text">
+              <ion-icon name="time-outline"></ion-icon> Started {{niceTime(meeting.creation_timestamp)}}
+            </p>
+            <a class="btn btn-primary btn-small" @click="navigate('/meeting/'+meeting.id)">Join</a>
+          </div>
+
         </div>
 
       </div>
 
-    </div>
+    </template>
+
+    <template v-else>
+
+      <div class="welcome-area">
+        <lottie-player
+            autoplay
+            loop
+            mode="normal"
+            src="/animations/jetpack.json"
+            style="width: 620px; height: 300px;"
+          >
+        </lottie-player>
+
+        <h1>Welcome to Spark!</h1>
+        <p>
+          We're glad to have you onboard. To get started, hit 'New meeting' at the bottom left.<br />Happy meetings!
+        </p>
+
+      </div>
+
+
+
+    </template>
 
 
     <div class="explainer-section">
@@ -344,7 +378,8 @@
 
     <div class="flex form-section">
       <div>
-        <p>Email address</p>
+        <p v-if="isNaN(account.identities[0])">Email address</p>
+        <p v-else>Phone number</p>
         <div class="form-field">
           <input type="text" :value="account.identities[0]" disabled>
         </div>
@@ -358,7 +393,7 @@
 
     <div class="sessions-container">
 
-      <div class="session-item flex" v-for="s in [...sessions].sort((a,b) => a.last_seen < b.last_seen)">
+      <div class="session-item flex" v-for="s in [...sessions].sort((a,b) => { if(a.last_seen < b.last_seen){ return 1; } else{ return -1; } })">
 
         <div class="v-center">
           <ion-icon name="location-outline"></ion-icon>
@@ -395,6 +430,9 @@
 </template>
 
 <script>
+
+import "@lottiefiles/lottie-player";
+
 export default {
   name: 'Login',
   computed: {
@@ -654,12 +692,23 @@ export default {
 
     window.app = this;
 
+    if(window.hasOwnProperty('intervals')){
+      window.intervals.forEach((i) => {
+        clearInterval(i);
+      });
+    }
+    else{
+      window.intervals = [];
+    }
+
     //Reload account, sessions and meetings every 30 sec
-    app.interval = setInterval(() => {
+    let mainInterval = setInterval(() => {
       app.loadSessions();
       app.loadAccount();
       app.loadMeetings();
     },30000);
+
+    window.intervals.push(mainInterval);
 
     app.loadSessions();
     app.loadAccount();
@@ -687,6 +736,34 @@ body {
 <style scoped lang="scss">
 @use './../assets/scss/_theme' as *;
 @use './../assets/scss/_elements' as *;
+
+.no-meetings-sidebar{
+  color: $text-grey;
+  text-align: center;
+
+  .icon{
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+}
+
+.welcome-area{
+
+  text-align: center;
+
+  lottie-player{
+    margin: 0px auto;
+  }
+
+  h1{
+    margin-top: 35px;
+  }
+
+  p{
+    color: $text-grey;
+    line-height: 1.7;
+  }
+}
 
 .p-icon {
     height: 32px;
