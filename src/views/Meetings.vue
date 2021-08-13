@@ -214,7 +214,7 @@
 
         <div class="v-center" style="margin-left: auto;">
           <div class="sidebar-buttons-right">
-            <div class="btn-sidebar" @click="displayNewMeetingPopup = true">
+            <div class="btn-sidebar" @click="displayNewMeetingPopup = true; getPreliminaryJoinLink();">
               <ion-icon name="add-outline"></ion-icon>
             </div>
           </div>
@@ -909,7 +909,7 @@ body {
         height: 35px;
         background-color: $bg-main;
         border-radius: 50%;
-        margin: 2.5px;
+        transform: translate(2.5px,2.5px);
         color: #fff;
         text-align: center;
         font-weight: 600;

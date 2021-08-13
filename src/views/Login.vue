@@ -148,6 +148,15 @@ export default {
       return this.$store.state.appName
     }
   },
+  mounted() {
+
+    let URLParams = new URLSearchParams(window.location.search);
+    if(URLParams.get('e') !== null){
+      this.identity = atob(URLParams.get('e'));
+      this.current_type = "email";
+    }
+
+  },
   data() {
     return {
       login_stage: 'query_identity',
