@@ -511,8 +511,6 @@
         </div>
       </div>
 
-
-
       <div :class="'settings-card' + ((settingsTab == 'meeting') ? ' active':'')" v-if="meeting.is_owner">
         <div class="header flex" @click="switchSettingsTab('meeting')">
           <div class="v-center">
@@ -563,6 +561,42 @@
         </div>
       </div>
 
+      <div :class="'settings-card' + ((settingsTab == 'security') ? ' active':'')" >
+        <div class="header flex" @click="switchSettingsTab('security'); window.jdenticon.update('[data-jdenticon-value]')">
+          <div class="v-center">
+            <p>Security</p>
+          </div>
+          <div class="v-center dropdown-icon">
+            <ion-icon name="caret-down"></ion-icon>
+          </div>
+        </div>
+        <div class="content">
+
+          <p class="label margin">Security code</p>
+          <p class="label margin">
+            To verify that end-to-end encryption is working, check that your security code and pattern match with other members of the meeting.
+          </p>
+
+
+          <div class="flex">
+            <div class="v-center">
+              <svg class="security_img" width="80" height="80" :data-jdenticon-value="verificationHash"></svg>
+            </div>
+            <div>
+              <div class="v-center">
+                <div class="security_code flex">
+                  <div class="code-part flex" v-for="part in verificationHash.split(' ')">
+                    <p v-for="digit in part.split('')"> {{digit}} </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+        </div>
+      </div>
+
 
     </div>
 
@@ -591,14 +625,30 @@
 
         <div class="p-separator" v-if="Object.keys(messages).indexOf(i)>0 && messages[Object.keys(messages)[Object.keys(messages).indexOf(i)-1]].from !== message.from && messages[Object.keys(messages)[Object.keys(messages).indexOf(i)-1]].type !== 'announcement'"></div>
 
-
         <div class="message-announcement" v-if="message.type == 'announcement'">
           <ion-icon v-if="message.icon !== ''" :name="message.icon"></ion-icon> {{message.announcement}}
           <span class="announcement-time"> &nbsp;{{niceTimeAlt(message.timestamp)}}</span>
         </div>
 
+        <div class="message" v-if="Object.keys(messages).indexOf(i) == 0">
+          <div class="message-info flex">
+            <div class="v-center message-label-container">
+              <div class="message-label">Spark <span class="bot-label">Bot</span></div>
+            </div>
+            <div class="v-center">
+              <div class="message-time">
+                {{niceTimeAlt(message.timestamp)}}
+              </div>
+            </div>
+          </div>
+          <div class="flex">
+            <div class="bubble">
+              Welcome to Spark meetings! All of your chat, files, audio and video and end-to-end encrypted, so only you and your team mates have access. <img src="./../assets/img/emoji/locked.png" class="emoji" />
+            </div>
+          </div>
+        </div>
 
-        <div :class="'message' + ((message.from == account.userID) ? ' self':'')" v-else>
+        <div :class="'message' + ((message.from == account.userID) ? ' self':'')" v-if="message.type !== 'announcement'">
 
           <div class="message-info flex">
             <div class="v-center message-label-container">
@@ -610,7 +660,33 @@
             </div>
           </div>
 
-          <template v-if="message.type == 'textmessage'">
+          <template v-if="message.failed">
+
+            <div class="flex">
+              <div style="margin-left: auto;" v-if="message.from == account.userID"></div>
+
+              <div class="bubble failed">
+                <div class="inner">
+                  {{ getFailMessageText(i) }}
+                </div>
+
+                <div class="message-failed v-center" >
+                  <div>
+                    <ion-icon name="lock-closed"></ion-icon> Cannot decrypt
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </template>
+
+          <template v-else-if="message.loading">
+
+            <div class="message-loading"></div>
+
+          </template>
+
+          <template v-else-if="message.type == 'textmessage'">
 
             <div class="flex">
               <div style="margin-left: auto;" v-if="message.from == account.userID"></div>
@@ -635,7 +711,7 @@
               <img class="sharedImage" v-if="img_mimes.includes(message.attachment.type)" :src="message.objectURL" @click="sharedImgPopup = message.objectURL" />
 
               <div class="attachment-card flex" v-else
-                @click="downloadAttachment(message.attachment.attachment_id, message.attachment.keys, message.attachment.priv_key, {name: message.attachment.name, mime_type: message.attachment.mime_type, size: message.attachment.size})">
+                @click="downloadAttachment(message.attachment.attachment_id, message.attachment.keys, {name: message.attachment.name, mime_type: message.attachment.mime_type, size: message.attachment.size})">
                 <div class="icon-zone v-center">
                   <ion-icon name="document-attach-outline"></ion-icon>
                 </div>
@@ -661,7 +737,7 @@
 
     </div>
 
-    <div class="message-box flex">
+    <div :class="'message-box flex'  + ((messageBoxFocus) ? ' focussed':'')">
 
       <div class="inline-emoji-picker flex" v-if="emojiSearch(inlineEmojiSearchText).length > 0">
         <template v-for="(emoji,i) in emojiSearch(inlineEmojiSearchText)">
@@ -735,7 +811,7 @@
         New messages <ion-icon name="arrow-down"></ion-icon>
       </div>
       <input autocomplete="off" tabindex="-1" type="text" id="messageInput" v-model="newMessageText" placeholder="Write a message..." @keyup.enter="messageBoxEnter()" @keydown.left="panInlineEmojis($event,'left')" @keydown.right="panInlineEmojis($event,'right')"
-        @input="messageBoxInput()">
+        @input="messageBoxInput()" @focus="messageBoxFocus = true" @blur="messageBoxFocus = false">
       <div class="message-box-icon" @click="showEmojiPicker = !showEmojiPicker;" id="emojiPickerButton">
         <ion-icon name="happy-outline"></ion-icon>
       </div>
@@ -842,9 +918,23 @@ export default {
       dropdownAreaVideo: false,
       dropdownAreaAudio: false,
 
+      verificationHash: "",
+
+      failMessageText: {},
+
+      messageBoxFocus: false
+
     }
   },
   methods: {
+
+    getFailMessageText(message_id){
+      if(!app.failMessageText.hasOwnProperty(message_id)){
+        app.failMessageText[message_id] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".substr(Math.round((Math.random()*100)),Math.round((Math.random()*50)+20)).trim();
+      }
+
+      return app.failMessageText[message_id];
+    },
 
 
     resizeVideoCards(){
@@ -979,7 +1069,7 @@ export default {
 
       app.uploadPopup = false;
 
-      if (app.uploadedFile.size > 1000000) { //Max 1MB
+      if (app.uploadedFile.size > 2000000) { //Max 2MB
         app.displayError("Oh no! Your file is too large to send.");
       } else {
 
@@ -1187,14 +1277,25 @@ export default {
     sendChatMessage(message) {
 
       if ((message.length > 0) && (message.length < 1500)) {
-        app.api_request("POST", "/meetings/" + app.meeting_id + "/sendMessage", app.createMessageObject(message)).then(() => {
-          app.getChatMessages();
+        app.createMessageObject(message).then((messageObj) => {
+
+          app.api_request("POST", "/meetings/" + app.meeting_id + "/sendMessage", messageObj).then(() => {
+            app.getChatMessages();
+          }).catch(() => {
+            app.displayError("Failed to send message");
+          });
+
+        }).catch(() => {
+          app.displayError("Failed to send message");
         });
+      }
+      else{
+        app.displayError("Message too long! Maximum 1500 characters");
       }
 
     },
 
-    downloadAttachment(attachment_id, keys, priv_key, attachment_info) {
+    downloadAttachment(attachment_id, keys, attachment_info) {
 
       app.api_request("POST", '/meetings/downloadAttachment', {
         attachment_id: attachment_id
@@ -1204,15 +1305,15 @@ export default {
 
         if (resp.status == "success") {
 
-          let file = app.decryptAttachment(resp.content_base64, keys, priv_key, attachment_info);
-
-          var element = document.createElement('a');
-          element.setAttribute('href', URL.createObjectURL(file));
-          element.setAttribute('download', file.name);
-          element.style.display = 'none';
-          document.body.appendChild(element);
-          element.click();
-          document.body.removeChild(element);
+          let file = app.decryptAttachment(resp.content_base64, keys, attachment_info).then((file) => {
+            var element = document.createElement('a');
+            element.setAttribute('href', URL.createObjectURL(file));
+            element.setAttribute('download', file.name);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+          }).catch(() => app.displayError("There was a problem downloading this attachment"));
 
 
         } else {
@@ -1261,38 +1362,49 @@ export default {
 
             if (message.type == "textmessage") {
 
-              let message_content = app.decryptMessage(message.content.content_base64, message.content.keys, message.content.priv_key);
-
               app.messages[message.id] = {
                 type: "textmessage",
                 timestamp: message.timestamp,
                 from: message.from,
                 last_modified: message.content.last_modified,
-                message: message_content,
-                isJustEmojis: app.isJustEmojis(message_content)
+                loading: true,
+                failed: false
               }
 
+              app.decryptMessage(message.content.content_base64, message.content.keys).then((content) => {
+                app.messages[message.id].message = content;
+                app.messages[message.id].isJustEmojis =  app.isJustEmojis(content);
+                app.messages[message.id].loading = false;
+              }).catch(() => {
+                app.messages[message.id].failed = true;
+              });
 
             }
 
 
             if (message.type == "attachment") {
 
-              let attachment = app.decryptAttachment(message.content.content_base64, message.content.keys, message.content.priv_key, {
-                name: message.content.attachment_name,
-                mime_type: message.content.attachment_mime_type,
-                size: message.content.attachment_size,
-                attachment_id: message.content.attachment_id
-              });
-
               app.messages[message.id] = {
                 type: "attachment",
                 timestamp: message.timestamp,
                 from: message.from,
                 last_modified: message.content.last_modified,
-                attachment: attachment,
-                objectURL: ((app.img_mimes.includes(attachment.type)) ? URL.createObjectURL(attachment) : '')
+                loading: true,
+                failed: false
               }
+
+              app.decryptAttachment(message.content.content_base64, message.content.keys, {
+                name: message.content.attachment_name,
+                mime_type: message.content.attachment_mime_type,
+                size: message.content.attachment_size,
+                attachment_id: message.content.attachment_id
+              }).then((attachment) => {
+                app.messages[message.id].attachment = attachment;
+                app.messages[message.id].objectURL = ((app.img_mimes.includes(attachment.type)) ? URL.createObjectURL(attachment) : '');
+                app.messages[message.id].loading = false;
+              }).catch(() => {
+                app.messages[message.id].failed = true;
+              });
 
 
             }
@@ -1482,8 +1594,27 @@ export default {
           if (app.meeting_name_temp == "") {
             app.meeting_name_temp = resp.meeting.title;
           }
+
+
+          //Calculate security hash from participant public keys
+          let publicKeys = [];
+          app.meeting.participants.forEach((p) => {
+            publicKeys.push(p.public_key);
+          });
+          publicKeys.sort((a,b) => a > b);
+
+          let encoder = new TextEncoder();
+          crypto.subtle.digest("SHA-256", encoder.encode(publicKeys.join(","))).then((buff) => {
+            app.verificationHash = (new Uint16Array(buff)).map((i) => (i.toString()+"00000").substr(0,5)).join(" ");
+          });
+
+
+
         } else {
-          app.navigate('/404');
+
+          if(resp.error !== "Not logged in"){
+            app.navigate('/404');
+          }
         }
 
       });
@@ -1570,6 +1701,11 @@ export default {
         app.setPeer({});
       }
     }, 15000));
+
+    window.intervals.push(setInterval(() => {
+      window.jdenticon.update('[data-jdenticon-value]');
+    }, 1000));
+
 
 
     var oldMaxscrollPos = 0;

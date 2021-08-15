@@ -1,0 +1,147 @@
+img{
+  user-select: none;
+}
+
+.parallax {
+    transition: transform 0.2s;
+}
+
+.top-spacer {
+    margin-top: 120px;
+}
+
+.section {
+    max-width: calc(100vw - 100px);
+    width: 1200px;
+    margin: 0 auto;
+    color: #fff;
+    position: relative;
+}
+
+h1.headline {
+    font-weight: 800;
+    font-size: 55px;
+    text-align: center;
+    margin-bottom: 23px;
+}
+
+p.subheading {
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 160%;
+    text-align: center;
+}
+
+.flagship-container {
+
+    max-width: 50vw;
+    width: 830px;
+    margin: 100px auto 100px auto;
+
+    background: linear-gradient(116.53deg, rgba(228, 88, 250, 0.9) 16.65%, rgba(255, 189, 79, 0.9) 85.08%);
+    border-radius: 10px;
+
+    &.scrolling{
+      position: relative;
+      .flagship{
+        position: absolute;
+        top: 50%;
+        left: 15px;
+        transform: translateY(-50%);
+        margin: 0px;
+      }
+    }
+
+    .flagship {
+        max-width: calc(50vw - 30px);
+        width: 800px;
+        margin: 15px;
+    }
+
+    .items{
+      margin-top: 25px;
+    }
+
+    .itemCard{
+      margin-bottom: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 5px;
+      animation: cardLoad 0.5s;
+      padding: 20px 30px;
+
+      .icon-container{
+        height: auto;
+        font-size: 25px;
+        color: rgba(255,255,255,0.9);
+      }
+
+      .card-content{
+
+        p.heading{
+          font-weight: 500;
+          margin-bottom: 5px;
+        }
+        p:not(.heading){
+          color: rgba(255,255,255,0.85);
+        }
+        margin-left: 35px;
+      }
+    }
+
+    .spot-on{
+      width: 20px;
+      height: 20px;
+      background-color: #6FCF97;
+      box-shadow: 0px 0px 3px 3px rgba(#6FCF97,0.3);
+      border-radius: 50%;
+      box-sizing: content-box;
+
+      animation: spotOn 2s infinite;
+    }
+
+    @keyframes spotOn{
+      0%{
+        box-shadow: 0px 0px 0px 0px rgba(#6FCF97,0.5);
+      }
+      50%{
+        box-shadow: 0px 0px 3px 3px rgba(#6FCF97,0.5);
+      }
+      100%{
+        box-shadow: 0px 0px 0px 0px rgba(#6FCF97,0.5);
+      }
+    }
+
+    @keyframes cardLoad{
+      from{
+        opacity: 0;
+      }
+      to{
+        opacity: 1;
+      }
+    }
+
+    .flagship-right{
+      position: absolute;
+      right: 0px;
+      width: calc(50vw - 200px);
+      color: #fff;
+      margin: 0px 70px;
+      opacity: 0;
+      transition: opacity 0.7s;
+
+      h1{
+        font-size: 60px;
+        font-weight: 800;
+      }
+    }
+}
+
+.bubblestar {
+    position: fixed;
+    z-index: -1;
+    height: 500px;
+    width: 500px;
+    border-radius: 50%;
+    opacity: 0.5;
+    background: linear-gradient(180deg, rgba(88, 124, 250, 0.3) 0%, rgba(88, 124, 250, 0.02) 100%), radial-gradient(50% 50% at 50% 50%, #E458FA 0%, rgba(228, 88, 250, 0) 100%);
+}

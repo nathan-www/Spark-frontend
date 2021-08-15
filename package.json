@@ -9,8 +9,11 @@
   "dependencies": {
     "@lottiefiles/lottie-player": "^1.1.1",
     "core-js": "^3.6.5",
+    "jdenticon": "^3.1.0",
+    "rellax": "^1.12.1",
     "v-click-outside": "^3.1.2",
     "vue": "^3.0.0",
+    "vue-rellax": "^0.2.0",
     "vue-router": "^4.0.0-0",
     "vue3-click-away": "^1.2.1",
     "vuex": "^4.0.0-0"

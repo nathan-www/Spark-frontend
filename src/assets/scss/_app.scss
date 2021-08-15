@@ -28,13 +28,13 @@
     padding: 10px 20px;
     border-bottom: 1px solid $element-dark;
 
-    .online-now-text{
+    .online-now-text {
       font-size: 12px;
       color: $text-grey;
       cursor: pointer;
       transition: color 0.2s;
 
-      &:hover{
+      &:hover {
         color: #ccc;
       }
     }
@@ -99,9 +99,29 @@
 .message {
   width: 80%;
   margin-top: 15px;
+  overflow: hidden;
 
   .message-announcement + & {
     margin-top: 25px;
+  }
+
+  .message-loading {
+    width: 100%;
+    height: 40px;
+    background: linear-gradient(100deg, rgba(255,255,255,0.02) 30%, rgba(255,255,255,0.035) 50%, rgba(255,255,255,0.02) 70%);
+    animation: messageLoading 1.2s ease-in-out infinite;
+    background-size: 400%;
+    border-radius: 5px;
+  }
+
+  @keyframes messageLoading {
+    0% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0 50%;
+    }
   }
 
   &.self {
@@ -164,6 +184,21 @@
     padding: 10px 14px;
     border-radius: 20px;
     user-select: text;
+    position: relative;
+
+    &.failed .inner{
+      filter: blur(2px);
+    }
+
+    .message-failed{
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      text-align: center;
+      user-select: none;
+    }
 
     &.emojiMessage {
       font-size: 30px;
@@ -179,6 +214,13 @@
   border-radius: 8px;
   margin: 0 20px 20px;
   position: relative;
+  border: 1px solid transparent;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &.focussed{
+    border-color: $primary;
+    box-shadow: 0px 0px 0px 4px rgba($primary,0.1);
+  }
 
   .scrolldown-alert {
     position: absolute;
@@ -297,13 +339,13 @@
     transition: box-shadow 0.2s;
     position: relative;
 
-    &.off{
-      .disabled{
+    &.off {
+      .disabled {
         display: block;
       }
     }
 
-    .disabled{
+    .disabled {
       display: none;
       position: absolute;
       left: 2.5px;
@@ -1019,48 +1061,48 @@
   }
 }
 
-.alone{
+.alone {
   width: 100%;
 
-  .inner{
+  .inner {
     text-align: center;
     color: $text-grey;
 
-    lottie-player{
-      margin: 0px auto;
+    lottie-player {
+      margin: 0 auto;
     }
 
-    h2{
+    h2 {
       font-weight: 400;
       font-size: 17px;
     }
   }
 }
 
-.meeting-loading{
+.meeting-loading {
   text-align: center;
   color: $text-grey;
   width: 100%;
-  h2{
+
+  h2 {
     font-weight: 400;
     font-size: 17px;
   }
-  .superstring-indicator-light{
+
+  .superstring-indicator-light {
     height: 25px;
     width: 25px;
     border-radius: 50%;
     background-color: $success-dark;
-
     animation: superStringAnimation 1s ease-in-out infinite;
-    margin: 0px auto 40px auto;
+    margin: 0 auto 40px;
   }
 }
 
-.in-meeting-list{
-
+.in-meeting-list {
   margin-bottom: 20px;
 
-  .p-icon{
+  .p-icon {
     width: 35px;
     height: 35px;
     font-size: 15px;
@@ -1084,9 +1126,9 @@
         background-color: $danger;
       }
     }
-
   }
-  .label{
+
+  .label {
     height: 35px;
     font-size: 11px;
     color: $text-grey;
@@ -1094,14 +1136,13 @@
   }
 }
 
-p.nobody{
+p.nobody {
   font-size: 14px;
   color: $text-grey;
   width: 100%;
   text-align: center;
   margin-top: 20px;
 }
-
 
 .video-area {
   height: calc(100% - 80px);
@@ -1111,7 +1152,7 @@ p.nobody{
   .video-card {
     position: relative;
 
-    .user-shy{
+    .user-shy {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -1124,10 +1165,9 @@ p.nobody{
       border-radius: 50%;
       text-align: center;
       border: 3px solid $success-dark;
-
       transition: border-color 0.2s;
 
-      span{
+      span {
         color: #efefef;
       }
     }
@@ -1139,13 +1179,13 @@ p.nobody{
       pointer-events: none;
     }
 
-    .video-card-volume-buttons-right{
+    .video-card-volume-buttons-right {
       position: absolute;
       bottom: 8px;
       right: 8px;
     }
 
-    .video-card-btn{
+    .video-card-btn {
       height: 26px;
       width: 26px;
       background-color: rgba($bg-main,0.6);
@@ -1157,36 +1197,34 @@ p.nobody{
       transition: background-color 0.2s;
       position: relative;
 
-      &:hover{
+      &:hover {
         background-color: $bg-main;
       }
 
-      ion-icon{
+      ion-icon {
         margin: auto;
       };
     }
 
-    .volume-slider{
+    .volume-slider {
       position: absolute;
       top: -5px;
       left: 13px;
       border-radius: 10px;
-
       transform: translateY(-100%) translateX(-50%);
-
       width: 5px;
       background-color: rgba(255,255,255,0.18);
 
-      &-active{
+      &-active {
         position: absolute;
-        left: 0px;
-        bottom: 0px;
+        left: 0;
+        bottom: 0;
         width: 5px;
-        border-radius: 0px 0px 10px 10px;
+        border-radius: 0 0 10px 10px;
         background-color: rgba(255,255,255,0.4);
       }
 
-      .volume-slider-handle{
+      .volume-slider-handle {
         position: absolute;
         left: -3.5px;
         width: 12px;
@@ -1204,7 +1242,7 @@ p.nobody{
       background-color: rgba($bg-main,0.6);
       border-radius: 7px;
 
-      .off-icon{
+      .off-icon {
         color: $danger;
         margin-left: 5px;
       }
@@ -1221,7 +1259,7 @@ p.nobody{
         background-color: $success;
         border-radius: 50%;
         margin-left: 6px;
-        box-shadow: 0px 0px 4px rgba(111, 207, 151, 0.5);
+        box-shadow: 0 0 4px rgba(111, 207, 151, 0.5);
       }
     }
   }
@@ -1318,18 +1356,17 @@ p.nobody{
   position: relative;
   z-index: 2;
 
-  .device-active-label{
+  .device-active-label {
     white-space: nowrap;
     text-overflow: ellipsis;
     max-width: 260px;
     overflow: hidden;
   }
 
-  .dropdown-area{
-
+  .dropdown-area {
     position: absolute;
     bottom: -5px;
-    left: 0px;
+    left: 0;
     background-color: $bg-main;
     border: 1px solid $border-grey;
     transform: translateY(100%);
@@ -1337,11 +1374,10 @@ p.nobody{
     padding: 5px;
     border-radius: 7px;
 
-    .item{
+    .item {
       padding: 5px 8px;
       border-radius: 7px;
       color: #fff;
-
       white-space: nowrap;
       text-overflow: ellipsis;
       width: 100%;
@@ -1349,7 +1385,7 @@ p.nobody{
       transition: background-color 0.2s;
       cursor: pointer;
 
-      &:hover{
+      &:hover {
         background-color: $element-dark;
       }
     }
@@ -1377,6 +1413,43 @@ p.nobody{
 .device-checkmark {
   --ionicon-stroke-width: 45px;
 }
+
+
+.security_img{
+  background-color: #fff;
+  border-radius: 8px;
+  flex-shrink: 0;
+  margin-right: 15px;
+}
+
+.security_code{
+  margin-top: 5px;
+  color: $text-grey;
+  flex-wrap: wrap;
+
+  .code-part{
+    width: 45px;
+    margin: 0px 8px 8px 0px;
+
+    p{
+      width: 9px;
+      font-family: Consolas, monaco, monospace;
+      font-size: 15.5px;
+      overflow: hidden;
+    }
+  }
+}
+
+.bot-label{
+  color: #fff;
+  background-color: $primary;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 9px;
+  position: relative;
+  top: -1px;
+}
+
 @keyframes scrollDown {
   0% {
     transform: translateY(0px);
@@ -1414,15 +1487,16 @@ p.nobody{
     transform: translateY(-3px);
   }
 }
+@keyframes superStringAnimation {
+  0% {
+    box-shadow: 0 0 4px $success-dark;
+  }
 
-@keyframes superStringAnimation{
-  0%{
-    box-shadow: 0px 0px 4px $success-dark;
+  50% {
+    box-shadow: 0 0 14px $success-dark;
   }
-  50%{
-    box-shadow: 0px 0px 14px $success-dark;
-  }
-  100%{
-    box-shadow: 0px 0px 4px $success-dark;
+
+  100% {
+    box-shadow: 0 0 4px $success-dark;
   }
 }

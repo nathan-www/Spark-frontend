@@ -40,7 +40,7 @@ const VideoMixin = {
 
       this.call.peer.on('open', function(id) {
         //Ensure updated peer ID is on server
-        if (app.meeting.participants.filter((i) => i.user_id == app.account.userID)[0]['peer_id'] !== id) {
+        if (app.meeting.participants.filter((i) => i.user_id == app.account.userID).length > 0 && app.meeting.participants.filter((i) => i.user_id == app.account.userID)[0]['peer_id'] !== id) {
           app.setPeer({
             peer_id: id
           });
