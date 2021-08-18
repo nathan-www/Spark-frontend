@@ -3,7 +3,9 @@
   <img src="./../assets/img/emoji/monkey.png" alt="">
 </div>
 
-<a class="logo-alt">{{appName}}</a>
+<a class="logo-alt">
+  <img style="height: 1em; opacity: 0.6;" src="@/assets/img/logo.png" />
+</a>
 
 <div class="popup-backdrop fadeIn" id="popup-backdrop"></div>
 
@@ -427,6 +429,7 @@
   </div>
 
 </div>
+
 </template>
 
 <script>
