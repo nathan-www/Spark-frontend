@@ -218,7 +218,7 @@ var Mixins = {
     },
 
     api_request: function(method, endpoint, data = []) {
-      let api_base = "http://localhost:8081";
+      let api_base = "https://withspark.co/api";
       let csrf_token = Math.round(Math.random() * 1000000000000);
       document.cookie = "spark_CSRFToken=" + csrf_token;
 

@@ -328,7 +328,7 @@
 
         <h1>Welcome to Spark!</h1>
         <p>
-          We're glad to have you onboard. To get started, hit 'New meeting' at the bottom left.<br />Happy meetings!
+          We're glad to have you on board. To get started, hit 'New meeting' at the bottom left.<br />Happy meetings!
         </p>
 
       </div>

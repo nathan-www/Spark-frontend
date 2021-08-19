@@ -1,5 +1,7 @@
 <template>
-<a class="main-logo">{{appName}}</a>
+<a class="main-logo" @click="">
+  <img src="@/assets/img/logo.png" style="height: 1.2em;" alt="">
+</a>
 
 
 <div class="main v-center">

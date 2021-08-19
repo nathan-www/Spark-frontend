@@ -1591,6 +1591,8 @@ export default {
           app.meeting = resp.meeting;
           app.loading_new_name = false;
 
+          document.title = "Spark - " + resp.meeting.title;
+
           if (app.meeting_name_temp == "") {
             app.meeting_name_temp = resp.meeting.title;
           }
