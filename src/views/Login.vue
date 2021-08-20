@@ -184,14 +184,6 @@ export default {
         1: {
           "code": "1",
           "country": "united-states"
-        },
-        61: {
-          "code": "61",
-          "country": "Australia"
-        },
-        64: {
-          "code": "64",
-          "country": "new-zealand"
         }
       }
 
