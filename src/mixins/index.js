@@ -220,7 +220,7 @@ var Mixins = {
     api_request: function(method, endpoint, data = []) {
       let api_base = "https://withspark.co/api";
       let csrf_token = Math.round(Math.random() * 1000000000000);
-      document.cookie = "spark_CSRFToken=" + csrf_token;
+      document.cookie = "spark_CSRFToken="+csrf_token+"; path=/"; 
 
       //Allow three requests in queue
       if (api_queue.reduce((a,q) => { if(q == endpoint){ return a+1; } else{ return a; } },0) < 4 ) {
