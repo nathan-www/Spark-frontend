@@ -226,12 +226,12 @@ var Mixins = {
       let api_base = "https://withspark.co/api";
       let csrf_token = "";
 
-      if(getCookie("spark_CSRFToken") == null){
+      if(app.getCookie("spark_CSRFToken") == null){
         csrf_token = Math.round(Math.random() * 1000000000000);
         document.cookie = "spark_CSRFToken=" + csrf_token + "; path=/";
       }
       else{
-        csrf_token = getCookie("spark_CSRFToken");
+        csrf_token = app.getCookie("spark_CSRFToken");
       }
 
 
