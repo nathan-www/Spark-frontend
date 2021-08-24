@@ -621,7 +621,7 @@
     <div class="messages-area" @scroll="scrollEvent()">
 
 
-      <template v-for="(message,i) in Object.values(messages.sort((a,b) => { if(a.timestamp < b.timestamp){ return 1; } else{ return -1; } })" :key="message.id">
+      <template v-for="(message,i) in Object.values(messages).sort((a,b) => { if(a.timestamp < b.timestamp){ return 1; } else{ return -1; } })" :key="message.id">
 
         <div class="p-separator" v-if="Object.keys(messages).indexOf(i)>0 && messages[Object.keys(messages)[Object.keys(messages).indexOf(i)-1]].from !== message.from && messages[Object.keys(messages)[Object.keys(messages).indexOf(i)-1]].type !== 'announcement'"></div>
 
