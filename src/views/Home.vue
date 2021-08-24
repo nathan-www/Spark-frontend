@@ -55,11 +55,11 @@
         </div>
         <div class="item2 itemCard flex">
           <div class="v-center icon-container">
-            <div class="spot-on"></div>
+            <ion-icon name="lock-closed"></ion-icon>
           </div>
           <div class="card-content">
-            <p class="heading">Always-on</p>
-            <p>Meetings on spark stay open until you delete them. Use yours as a drop-in room, or a virtual classroom.</p>
+            <p class="heading">Secured with end-to-end encryption</p>
+            <p>Using a combination of RSA, AES and DTLS, all your audio, video, chat and files are protected. Spark cannot read your data.</p>
           </div>
         </div>
       </div>
@@ -239,7 +239,8 @@
 </div>
 
 
-<div style="margin-top: 200px;"></div>
+<div style="margin-top: 170px;"></div>
+
 
 
 <footer>

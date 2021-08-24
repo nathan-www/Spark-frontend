@@ -621,7 +621,7 @@
     <div class="messages-area" @scroll="scrollEvent()">
 
 
-      <template v-for="(message,i) in messages" :key="message.id">
+      <template v-for="(message,i) in Object.values(messages).sort((a,b) => { if(a.timestamp < b.timestamp){ return 1; } else{ return -1; } })" :key="message.id">
 
         <div class="p-separator" v-if="Object.keys(messages).indexOf(i)>0 && messages[Object.keys(messages)[Object.keys(messages).indexOf(i)-1]].from !== message.from && messages[Object.keys(messages)[Object.keys(messages).indexOf(i)-1]].type !== 'announcement'"></div>
 
@@ -1603,7 +1603,7 @@ export default {
           app.meeting.participants.forEach((p) => {
             publicKeys.push(p.public_key);
           });
-          publicKeys.sort((a,b) => a > b);
+          publicKeys.sort((a,b) => { if(a < b){ return 1; } else{ return -1; } });
 
           let encoder = new TextEncoder();
           crypto.subtle.digest("SHA-256", encoder.encode(publicKeys.join(","))).then((buff) => {
