@@ -902,8 +902,8 @@ body {
 
 .profile-circle-bg {
     background: linear-gradient($lg-1,$lg-2);
-    height: 40px;
-    width: 40px;
+    height: 41px;
+    width: 41px;
     border-radius: 50%;
     margin-right: 10px;
 

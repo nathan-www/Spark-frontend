@@ -1,145 +1,159 @@
 <template>
-<a class="main-logo">
-  <img style="height: 1.6em;" src="./../assets/img/logo.png" alt="">
-</a>
+  <a class="main-logo">
+    <img style="height: 1.6em;" src="./../assets/img/logo.png" alt="">
+  </a>
 
 
-<div class="main v-center">
+  <div class="main v-center">
 
 
-  <div class="login-section">
-    <div class="color-border" id="animateBorder">
+    <div class="login-section">
+      <div class="color-border" id="animateBorder">
 
 
-      <div class="inner v-center" v-if="login_stage=='query_identity' || login_stage=='new_user'">
+        <div class="inner v-center" v-if="login_stage=='query_identity' || login_stage=='new_user'">
 
-        <div class="fadeIn" v-if="login_stage == 'query_identity'">
-          <h1>Login</h1>
-          <p>Login or register with your email address or mobile phone number.</p>
+          <div class="fadeIn" v-if="login_stage == 'query_identity'">
+            <h1>Login</h1>
+            <p>Login or register with your email address or mobile phone number.</p>
 
-          <p class="color--danger" v-if="error">
-            Invalid email or phone number
-          </p>
+            <p class="color--danger" v-if="error">
+              Invalid email or phone number
+            </p>
 
-          <div :class="'form-field' + ((error) ? ' form-field-danger':'')">
+            <div :class="'form-field' + ((error) ? ' form-field-danger':'')">
 
-            <div class="dropdown-flag" v-if="current_type == 'phone'" @mouseup="toggleDropdown(document.getElementById('dropdown-zone'))">
-              <div class="v-center">
-                <img class="flag" :src="'/img/'+country_codes[current_country_code].country+'.png'" />
-              </div>
-              <div class="v-center">+{{current_country_code}}</div>
-              <div class="v-center caret">
-                <ion-icon name="caret-down-outline"></ion-icon>
-              </div>
+              <div class="dropdown-flag" v-if="current_type == 'phone'"
+                @mouseup="toggleDropdown(document.getElementById('dropdown-zone'))">
+                <div class="v-center">
+                  <img class="flag" :src="'/img/'+country_codes[current_country_code].country+'.png'" />
+                </div>
+                <div class="v-center">+{{current_country_code}}</div>
+                <div class="v-center caret">
+                  <ion-icon name="caret-down-outline"></ion-icon>
+                </div>
 
-              <div class="dropdown-zone" id="dropdown-zone">
-                <div class="dropdown-item" v-for="c in Object.keys(country_codes).filter((i) => { return i!==current_country_code; })" @click="current_country_code = c">
-                  <div class="v-center">
-                    <img class="flag" :src="'/img/'+country_codes[c].country+'.png'" />
+                <div class="dropdown-zone" id="dropdown-zone">
+                  <div class="dropdown-item"
+                    v-for="c in Object.keys(country_codes).filter((i) => { return i!==current_country_code; })"
+                    @click="current_country_code = c">
+                    <div class="v-center">
+                      <img class="flag" :src="'/img/'+country_codes[c].country+'.png'" />
+                    </div>
+                    <div class="v-center">+{{c}}</div>
                   </div>
-                  <div class="v-center">+{{c}}</div>
                 </div>
               </div>
+
+              <input @keyup.enter="loginRequest()" @input="filterPhoneNumber()" v-if="current_type == 'phone'"
+                v-model="identity" type="text" autocomplete="off" placeholder="Mobile number">
+              <input @keyup.enter="loginRequest()" @input="filterEmail()" v-if="current_type == 'email'"
+                v-model="identity" type="text" autocomplete="off" placeholder="Email address">
             </div>
 
-            <input @keyup.enter="loginRequest()" @input="filterPhoneNumber()" v-if="current_type == 'phone'" v-model="identity" type="text" autocomplete="off" placeholder="Phone number">
-            <input @keyup.enter="loginRequest()" @input="filterEmail()" v-if="current_type == 'email'" v-model="identity" type="text" autocomplete="off" placeholder="Email address">
+
+            <a class="switch" v-if="current_type == 'phone'" @click="identity = ''; current_type = 'email'">Use email
+              address instead</a>
+            <a class="switch" v-if="current_type == 'email'" @click="identity = ''; current_type = 'phone'">Use mobile
+              number instead</a>
+
+          </div>
+
+          <div v-if="login_stage == 'new_user'">
+
+            <h1>Looks like you’re new here</h1>
+            <p class="emphasize">Welcome to {{appName}}: the private video calling app!<br />Let’s start by getting to
+              know each other</p>
+
+            <p class="color--danger" v-if="error">
+              We couldn't register you with this name
+            </p>
+
+            <div class="flex">
+              <div class="form-field">
+                <input v-model="first_name" type="text" autocomplete="off" placeholder="First name" />
+              </div>
+              <div class="form-field">
+                <input v-model="last_name" type="text" autocomplete="off" placeholder="Last name" />
+              </div>
+            </div>
+
           </div>
 
 
-          <a class="switch" v-if="current_type == 'phone'" @click="identity = ''; current_type = 'email'">Use email address instead</a>
-          <a class="switch" v-if="current_type == 'email'" @click="identity = ''; current_type = 'phone'">Use phone number instead</a>
+          <div id="recaptcha_here" data-sitekey="6Lf_U5IbAAAAAFNrRqPz8m89550GQiI8w0eP-YVm" data-theme="dark"></div>
+
+          <a :class="'btn btn-primary' + ((loading) ? ' loading':'')" @click="loginRequest()">
+            <span class="loading-text">Logging in... </span>
+            <span class="normal-text">Login</span>
+            &nbsp;&nbsp;
+            <img class="icon loader" src="./../assets/img/loading.png" />
+          </a>
 
         </div>
 
-        <div v-if="login_stage == 'new_user'">
 
-          <h1>Looks like you’re new here</h1>
-          <p class="emphasize">Welcome to {{appName}}: the private video calling app!<br />Let’s start by getting to know each other</p>
 
-          <p class="color--danger" v-if="error">
-            We couldn't register you with this name
+        <div class="inner v-center" v-if="login_stage=='click_link'">
+
+          <h2>
+            <ion-icon name="sparkles-sharp"></ion-icon>
+          </h2>
+          <h1>We sent you a magic link!</h1>
+          <p>
+            Please click the link we sent you to approve this login request
           </p>
 
-          <div class="flex">
-            <div class="form-field">
-              <input v-model="first_name" type="text" autocomplete="off" placeholder="First name" />
+          <div class="flex animate-container" id="animateSpots">
+            <div class="animate-spot"></div>
+            <div class="animate-spot"></div>
+            <div class="animate-spot"></div>
+            <div class="animate-spot"></div>
+            <div class="animate-spot"></div>
+            <div class="animate-spot"></div>
+            <div class="animate-spot"></div>
+          </div>
+
+        </div>
+
+        <div class="inner v-center" v-if="login_stage=='enter_code'">
+
+          <h1>Enter the code from your other device</h1>
+          <p>
+            Looks like you clicked our magic link on a different device or browser. <br />
+            No problem! Enter the 5-digit code to verify its really you
+          </p>
+
+          <p class="color--danger" v-if="error" style="text-align: center;">
+            Oh no! We couldn't validate that code
+          </p>
+
+          <div class="flex digit-input-container">
+            <div class="digit-input-loading-overlay" v-if="loading">
+              <img class="icon loader" src="./../assets/img/loading.png" />
             </div>
-            <div class="form-field">
-              <input v-model="last_name" type="text" autocomplete="off" placeholder="Last name" />
-            </div>
+            <input type="text" @keyup.delete="digitDelete($event)" @input.prevent="digitInput($event)" data-index="0"
+              class="digit-input" placeholder="0" />
+            <input type="text" @keyup.delete="digitDelete($event)" @input.prevent="digitInput($event)" data-index="1"
+              class="digit-input" placeholder="0" />
+            <input type="text" @keyup.delete="digitDelete($event)" @input.prevent="digitInput($event)" data-index="2"
+              class="digit-input" placeholder="0" />
+            <input type="text" @keyup.delete="digitDelete($event)" @input.prevent="digitInput($event)" data-index="3"
+              class="digit-input" placeholder="0" />
+            <input type="text" @keyup.delete="digitDelete($event)" @input.prevent="digitInput($event)" data-index="4"
+              class="digit-input" placeholder="0" />
           </div>
 
         </div>
 
 
-        <div id="recaptcha_here" data-sitekey="6Lf_U5IbAAAAAFNrRqPz8m89550GQiI8w0eP-YVm" data-theme="dark"></div>
-
-        <a :class="'btn btn-primary' + ((loading) ? ' loading':'')" @click="loginRequest()">
-          <span class="loading-text">Logging in... </span>
-          <span class="normal-text">Login</span>
-          &nbsp;&nbsp;
-          <img class="icon loader" src="./../assets/img/loading.png" />
-        </a>
-
       </div>
-
-
-
-      <div class="inner v-center" v-if="login_stage=='click_link'">
-
-        <h2>
-          <ion-icon name="sparkles-sharp"></ion-icon>
-        </h2>
-        <h1>We sent you a magic link!</h1>
-        <p>
-          Please click the link we sent you to approve this login request
-        </p>
-
-        <div class="flex animate-container" id="animateSpots">
-          <div class="animate-spot"></div>
-          <div class="animate-spot"></div>
-          <div class="animate-spot"></div>
-          <div class="animate-spot"></div>
-          <div class="animate-spot"></div>
-          <div class="animate-spot"></div>
-          <div class="animate-spot"></div>
-        </div>
-
-      </div>
-
-      <div class="inner v-center" v-if="login_stage=='enter_code'">
-
-        <h1>Enter the code from your other device</h1>
-        <p>
-          Looks like you clicked our magic link on a different device or browser. <br />
-          No problem! Enter the 5-digit code to verify its really you
-        </p>
-
-        <p class="color--danger" v-if="error" style="text-align: center;">
-          Oh no! We couldn't validate that code
-        </p>
-
-        <div class="flex digit-input-container">
-          <div class="digit-input-loading-overlay" v-if="loading">
-            <img class="icon loader" src="./../assets/img/loading.png" />
-          </div>
-          <input type="text" @keyup.delete="digitDelete($event)" @input.prevent="digitInput($event)" data-index="0" class="digit-input" placeholder="0" />
-          <input type="text" @keyup.delete="digitDelete($event)" @input.prevent="digitInput($event)" data-index="1" class="digit-input" placeholder="0" />
-          <input type="text" @keyup.delete="digitDelete($event)" @input.prevent="digitInput($event)" data-index="2" class="digit-input" placeholder="0" />
-          <input type="text" @keyup.delete="digitDelete($event)" @input.prevent="digitInput($event)" data-index="3" class="digit-input" placeholder="0" />
-          <input type="text" @keyup.delete="digitDelete($event)" @input.prevent="digitInput($event)" data-index="4" class="digit-input" placeholder="0" />
-        </div>
-
-      </div>
-
-
     </div>
-  </div>
 
-  <p class="credits">&copy; {{appName}} {{(new Date()).getFullYear()}}&nbsp;  <a href="/">Home</a>&nbsp; <a href="/privacy">Privacy</a> &nbsp; <a href="/terms">Terms</a>
-  </p>
-</div>
+    <p class="credits">&copy; {{appName}} {{(new Date()).getFullYear()}}&nbsp; <a href="/">Home</a>&nbsp; <a
+        href="/privacy">Privacy</a> &nbsp; <a href="/terms">Terms</a>
+    </p>
+  </div>
 </template>
 
 <script>
@@ -153,7 +167,7 @@ export default {
   mounted() {
 
     let URLParams = new URLSearchParams(window.location.search);
-    if(URLParams.get('e') !== null){
+    if (URLParams.get('e') !== null) {
       this.identity = atob(URLParams.get('e'));
       this.current_type = "email";
     }
@@ -171,10 +185,10 @@ export default {
 
       request_id: "",
 
-      current_country_code:"44",
+      current_country_code: "44",
       current_type: "phone",
 
-      recaptcha_token: "",
+      recaptcha_token: "6Lf_U5IbAAAAAFNrRqPz8m89550GQiI8w0eP-YVm",
 
       country_codes: {
         44: {
@@ -250,16 +264,16 @@ export default {
           resp = JSON.parse(resp);
           this.loading = false;
 
-          if(resp.status == "fail" && resp.error == "Too many requests."){
+          if (resp.status == "fail" && resp.error == "Too many requests.") {
             this.loading = true;
             setTimeout(() => {
               this.login(code);
-            },10000);
+            }, 10000);
           }
-          else if(resp.status == "fail"){
+          else if (resp.status == "fail") {
             this.error = true;
           }
-          else if(resp.status == "success"){
+          else if (resp.status == "success") {
             this.$router.replace('/meetings');
           }
         });
@@ -285,7 +299,7 @@ export default {
         "recaptcha_token": this.recaptcha_token
       };
 
-      if(this.current_type == "phone"){
+      if (this.current_type == "phone") {
         reqObj.identity = this.current_country_code + "" + this.identity;
       }
 
@@ -323,7 +337,7 @@ export default {
                   //Give 10 second opportunity for automatic login from another tab, otherwise stop polling
                   setTimeout(() => {
                     clearInterval(loginStatusPoll);
-                  },10000);
+                  }, 10000);
 
                 } else if (resp.login_status == "Completed") {
                   //Completed (yay), so redirect to logged-in page
@@ -349,7 +363,7 @@ export default {
               document.getElementById('recaptcha_here').style.display = 'block';
               try {
                 grecaptcha.render('recaptcha_here');
-              } catch (error) {}
+              } catch (error) { }
 
               //keep polling recaptcha until solved, then login
               var recaptcha_poll = setInterval(() => {
@@ -361,7 +375,7 @@ export default {
                 }
               }, 100);
 
-            } else if (resp.hasOwnProperty('require_full_name')) {} else {
+            } else if (resp.hasOwnProperty('require_full_name')) { } else {
               //Probably an invalid input
               this.error = true;
             }
@@ -442,10 +456,10 @@ setInterval(() => {
 @use './../assets/scss/_theme' as *;
 
 body {
-    background-color: $bg-main;
-    height: 100vh;
-    width: 100vw;
-    user-select: none;
+  background-color: $bg-main;
+  height: 100vh;
+  width: 100vw;
+  user-select: none;
 }
 </style>
 
@@ -453,194 +467,197 @@ body {
 @use './../assets/scss/_theme' as *;
 @use './../assets/scss/_elements' as *;
 
-.main{
+.main {
   background-color: #000;
 }
 
 .login-section {
-    margin: auto;
-    text-align: center;
-    max-width: 600px;
+  margin: auto;
+  text-align: center;
+  max-width: 600px;
 
-    .color-border {
-        padding: 4px;
-        border-radius: 20px;
-        box-shadow: 0 0 5px rgba(255, 255, 255, 0.15);
-        border-top-color: $lg-1;
-        border-bottom-color: $lg-2;
-    }
+  .color-border {
+    padding: 4px;
+    border-radius: 20px;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.15);
+    border-top-color: $lg-1;
+    border-bottom-color: $lg-2;
+  }
 
-    .inner {
-        padding: 40px;
-        background-color: $bg-secondary;
-        color: #fff;
-        border-radius: 18px;
-        min-height: 450px;
-    }
+  .inner {
+    padding: 40px;
+    background-color: $bg-secondary;
+    color: #fff;
+    border-radius: 18px;
+    min-height: 450px;
+  }
 
 }
 
 h1 {
-    font-weight: 600;
-    font-size: 35px;
-    margin-bottom: 25px;
+  font-weight: 600;
+  font-size: 35px;
+  margin-bottom: 25px;
 }
 
 p {
-    color: $text-grey;
-    font-size: 15px;
-    font-weight: 400;
-    line-height: 24px;
-    margin-bottom: 25px;
+  color: $text-grey;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 24px;
+  margin-bottom: 25px;
 }
 
 p.emphasize {
-    line-height: 24px;
-    color: #fff;
+  line-height: 24px;
+  color: #fff;
 }
 
 .btn {
-    margin-top: 25px;
+  margin-top: 25px;
 }
 
 .btn:not(.loading) .loader,
 .btn:not(.loading) .loading-text {
-    display: none;
+  display: none;
 }
 
 .btn.loading .normal-text {
-    display: none;
+  display: none;
 }
 
 .btn.loading:hover {
-    filter: none;
-    cursor: default;
+  filter: none;
+  cursor: default;
 }
 
 p.color--danger {
-    text-align: left;
-    margin-bottom: 10px;
+  text-align: left;
+  margin-bottom: 10px;
 }
 
 .flag {
-    height: 25px;
-    margin-right: 7px;
+  height: 25px;
+  margin-right: 7px;
 }
 
 .dropdown-flag {
-    display: flex;
-    padding-left: 15px;
-    cursor: pointer;
-    position: relative;
+  display: flex;
+  padding-left: 15px;
+  cursor: pointer;
+  position: relative;
 
-    .caret {
-        margin-left: 4px;
-        font-size: 0.7em;
-    }
+  .caret {
+    margin-left: 4px;
+    font-size: 0.7em;
+  }
 
-    .dropdown-zone {
-        display: none;
-    }
+  .dropdown-zone {
+    display: none;
+  }
 }
 
 .flex .form-field:first-of-type {
-    margin-right: 15px;
+  margin-right: 15px;
 }
 
 .dropdown-zone {
-    border: 1px solid $border-grey;
-    background-color: $element-dark;
-    border-radius: 9px;
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    animation: fadeIn 0.2s;
+  border: 1px solid $border-grey;
+  background-color: $element-dark;
+  border-radius: 9px;
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  animation: fadeIn 0.2s;
 
-    transform: translateY(100%);
+  transform: translateY(100%);
 }
 
 .fadeIn {
-    animation: fadeIn 0.2s;
+  animation: fadeIn 0.2s;
 }
 
 .dropdown-item {
-    display: flex;
-    padding: 10px 15px;
-    transition: background-color 0.2s;
-    border-radius: 9px;
+  display: flex;
+  padding: 10px 15px;
+  transition: background-color 0.2s;
+  border-radius: 9px;
 
-    &:hover {
-        background-color: $bg-main;
-    }
+  &:hover {
+    background-color: $bg-main;
+  }
 }
 
 #recaptcha_here {
-    display: none;
-    margin-top: 10px;
+  display: none;
+  margin-top: 10px;
 }
 
 a.switch {
-    font-size: 12px;
-    text-decoration: underline;
-    margin-top: 12px;
-    color: $text-grey;
-    cursor: pointer;
-    display: block;
+  font-size: 12px;
+  text-decoration: underline;
+  width: fit-content;
+  margin: auto;
+  margin-top: 12px;
+  color: $text-grey;
+  cursor: pointer;
+  display: block;
 }
 
 h2 {
-    margin-bottom: 20px;
-    font-size: 2em;
+  margin-bottom: 20px;
+  font-size: 2em;
 }
 
 .animate-container {
-    margin: 10px auto 0;
+  margin: 10px auto 0;
 }
 
 .animate-spot {
-    height: 6px;
-    width: 6px;
-    background-color: #fff;
-    border-radius: 50%;
-    margin: 2px;
-    transition-timing-function: ease-in;
-    transition: transform 0.5s;
+  height: 6px;
+  width: 6px;
+  background-color: #fff;
+  border-radius: 50%;
+  margin: 2px;
+  transition-timing-function: ease-in;
+  transition: transform 0.5s;
 }
 
 .digit-input-container {
-    justify-content: center;
-    position: relative;
-    margin: 0px auto;
+  justify-content: center;
+  position: relative;
+  margin: 0px auto;
 }
 
 .digit-input {
-    border: 1px solid $border-grey;
-    background-color: $element-dark;
-    border-radius: 9px;
-    font-size: 25px;
-    color: #fff;
-    padding: 18px;
-    text-align: center;
-    width: 57px;
-    height: 57px;
+  border: 1px solid $border-grey;
+  background-color: $element-dark;
+  border-radius: 9px;
+  font-size: 25px;
+  color: #fff;
+  padding: 18px;
+  text-align: center;
+  width: 57px;
+  height: 57px;
 
-    margin-right: 10px;
-    &:last-child {
-        margin-right: 0;
-    }
+  margin-right: 10px;
+
+  &:last-child {
+    margin-right: 0;
+  }
 }
 
 .digit-input::placeholder {
-    color: $text-grey;
+  color: $text-grey;
 }
 
-.digit-input-loading-overlay{
+.digit-input-loading-overlay {
   position: absolute;
   top: 0px;
   left: 0px;
   width: 100%;
   height: 100%;
-  background-color: rgba($bg-main,0.8);
+  background-color: rgba($bg-main, 0.8);
   border: 1px solid $border-grey;
   border-radius: 9px;
   display: flex;
@@ -648,19 +665,19 @@ h2 {
   justify-content: center;
   text-align: center;
 
-  .icon{
+  .icon {
     margin: auto;
     font-size: 1.2em;
   }
 }
 
 p.credits {
-    margin-top: 25px;
-    font-size: 13px;
-    color: $text-grey;
-    position: fixed;
-    bottom: 0px;
-    left: 50%;
-    transform: translateX(-50%);
+  margin-top: 25px;
+  font-size: 13px;
+  color: $text-grey;
+  position: fixed;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 </style>
