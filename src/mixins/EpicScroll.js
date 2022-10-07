@@ -4,6 +4,8 @@ class EpicScroll {
 
         document.body.style.overflow = 'hidden';
 
+        this.scrollLocked = false;
+
         this.animations = [];
 
         window.addEventListener('wheel', (e) => {
@@ -15,6 +17,10 @@ class EpicScroll {
                 }
             }
         });
+    }
+
+    setScrollLock(bool){
+        this.scrollLocked = bool;
     }
 
     addAnimation({ startY = 0, distance = 0, blockScroll = false, scrollSpeed = 1, callback = () => { } }) {
@@ -34,6 +40,10 @@ class EpicScroll {
     }
 
     scroll(pixels, event) {
+
+        if (this.scrollLocked) {
+            return;
+        }
 
         let direction;
         if (pixels > 0) {
