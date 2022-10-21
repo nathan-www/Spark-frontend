@@ -1,4 +1,4 @@
-# Spark
+# Spark - Video Meetings App
 
 ![](https://nathanarnold.co.uk/assets/spark-img/spark.png##)
 
