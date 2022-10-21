@@ -9,6 +9,8 @@ Spark is a privacy-first video meetings app that runs in the browser.
 - Share files in the meeting
 - Audio, video, files and chat messages are fully end-to-end encrypted to ensure privacy and security
 
+Try this project live at [https://withspark.co](https://withspark.co)!
+
 ## Code
 This repo contains the frontend code for Spark. It is built using the Vue Javascript framework.
 
